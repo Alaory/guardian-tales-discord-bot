@@ -1,0 +1,3 @@
+/home/alaory/Codes/cpp/GT-BOT/build/CMakeFiles/GT-BOT.dir
+/home/alaory/Codes/cpp/GT-BOT/build/CMakeFiles/edit_cache.dir
+/home/alaory/Codes/cpp/GT-BOT/build/CMakeFiles/rebuild_cache.dir

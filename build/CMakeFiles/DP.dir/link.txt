@@ -1,0 +1,1 @@
+/usr/bin/c++ -rdynamic CMakeFiles/DP.dir/src/DataBase.cpp.o -o DP   -L/home/alaory/Codes/cpp/GT-BOT/Dep  -Wl,-rpath,/home/alaory/Codes/cpp/GT-BOT/Dep -lfirebase_storage -lfirebase_app -lpthread -lglib-2.0 
