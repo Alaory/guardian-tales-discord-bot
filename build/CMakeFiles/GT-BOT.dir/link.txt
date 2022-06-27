@@ -1,1 +1,0 @@
-/usr/bin/c++ -rdynamic "CMakeFiles/GT-BOT.dir/src/Main.cpp.o" -o GT-BOT   -L/home/alaory/Codes/cpp/GT-BOT/Dep  -Wl,-rpath,/home/alaory/Codes/cpp/GT-BOT/Dep -ldpp -lmyhtml -lssl -lcrypto -lfirebase_storage -lfirebase_app 

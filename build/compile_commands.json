@@ -1,7 +1,0 @@
-[
-{
-  "directory": "/home/alaory/Codes/cpp/GT-BOT/build",
-  "command": "/usr/bin/c++ -DTOKEN=\\\"NzM5MTczODYwMzU1ODY2Njg1.GtPmxU.nFMgRcorCjAhQwAdnrNOC6dODbQKOkicfOcSzU\\\" -I/home/alaory/Codes/cpp/GT-BOT/Dep/include -std=gnu++17 -o CMakeFiles/GT-BOT.dir/src/Main.cpp.o -c /home/alaory/Codes/cpp/GT-BOT/src/Main.cpp",
-  "file": "/home/alaory/Codes/cpp/GT-BOT/src/Main.cpp"
-}
-]

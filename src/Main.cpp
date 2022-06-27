@@ -5,9 +5,7 @@
 #include "DiscordBot.hpp"
 
 
-//TODO add discord bot 
-//make it open source under the GPT licence
-//bug fix
+
 int main(){
     website web("https://ucngame.com","/codes/guardian-tales-coupon-codes/","wp-block-table",MyHTML_TAG_FIGURE);
     firebase::App *app = firebase::App::Create(firebase::AppOptions());
