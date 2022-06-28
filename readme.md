@@ -1,6 +1,6 @@
 #       GURADRIAN TALES DISCORD BOT
 ##      UNDER DEVELOPMENT ONLY FOR LINUX
-thanks to 
+thanks to
     * firebase
     * DPP
     * httplib
