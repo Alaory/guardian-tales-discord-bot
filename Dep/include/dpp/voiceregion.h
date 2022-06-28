@@ -72,7 +72,7 @@ public:
 	 * @param j JSON to fill from
 	 * @return voiceregion& Reference to self
 	 */
-	 voiceregion& fill_from_json(nlohmann::json* j);
+	voiceregion& fill_from_json(nlohmann::json* j);
 
 	/**
 	 * @brief Build a json string for this object
@@ -80,7 +80,7 @@ public:
 	 * @param with_id Add ID to output
 	 * @return std::string JSON string
 	 */
-	std::string build_json(bool with_id = false) const;
+	virtual std::string build_json(bool with_id = false) const;
 
 	/**
 	 * @brief True if is the optimal voice server

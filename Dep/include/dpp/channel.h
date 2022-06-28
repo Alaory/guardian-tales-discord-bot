@@ -26,66 +26,59 @@
 #include <dpp/utility.h>
 #include <dpp/voicestate.h>
 #include <dpp/nlohmann/json_fwd.hpp>
+#include <dpp/permissions.h>
 #include <dpp/json_interface.h>
 #include <unordered_map>
 
 namespace dpp {
 
 /** @brief Flag integers as received from and sent to discord */
-enum channel_type {
-	GUILD_TEXT		= 0,	//!< a text channel within a server
+enum channel_type : uint8_t {
+	CHANNEL_TEXT		= 0,	//!< a text channel within a server
 	DM			= 1,	//!< a direct message between users
-	GUILD_VOICE		= 2,	//!< a voice channel within a server
-	GROUP_DM		= 3,	//!< a direct message between multiple users
-	GUILD_CATEGORY		= 4,	//!< an organizational category that contains up to 50 channels
-	GUILD_NEWS		= 5,	//!< a channel that users can follow and crosspost into their own server
+	CHANNEL_VOICE		= 2,	//!< a voice channel within a server
+	/**
+	 * @brief a direct message between multiple users
+	 * @deprecated this channel type was intended to be used with the now deprecated GameBridge SDK. Existing group dms with bots will continue to function, but newly created channels will be unusable
+	 */
+	GROUP_DM		= 3,
+	CHANNEL_CATEGORY	= 4,	//!< an organizational category that contains up to 50 channels
+	CHANNEL_NEWS		= 5,	//!< a channel that users can follow and crosspost into their own server
 	/**
 	 * @brief a channel in which game developers can sell their game on Discord
 	 * @deprecated store channels are deprecated by Discord
 	 */
-	GUILD_STORE		= 6,
-	GUILD_NEWS_THREAD	= 10,	//!< a temporary sub-channel within a GUILD_NEWS channel
-	GUILD_PUBLIC_THREAD	= 11,	//!< a temporary sub-channel within a GUILD_TEXT channel
-	GUILD_PRIVATE_THREAD	= 12,	//!< a temporary sub-channel within a GUILD_TEXT channel that is only viewable by those invited and those with the MANAGE_THREADS permission
-	GUILD_STAGE		= 13	//!< a "stage" channel, like a voice channel with one authorised speaker
+	CHANNEL_STORE		= 6,
+	CHANNEL_NEWS_THREAD	= 10,	//!< a temporary sub-channel within a GUILD_NEWS channel
+	CHANNEL_PUBLIC_THREAD	= 11,	//!< a temporary sub-channel within a GUILD_TEXT channel
+	CHANNEL_PRIVATE_THREAD	= 12,	//!< a temporary sub-channel within a GUILD_TEXT channel that is only viewable by those invited and those with the MANAGE_THREADS permission
+	CHANNEL_STAGE		= 13,	//!< a "stage" channel, like a voice channel with one authorised speaker
+	CHANNEL_DIRECTORY	= 14,   //!< the channel in a [hub](https://support.discord.com/hc/en-us/articles/4406046651927-Discord-Student-Hubs-FAQ) containing the listed servers
+	CHANNEL_FORUM		= 15	//!< forum channel, coming soon(tm)
 };
-/** @brief Our flags as stored in the object */
-enum channel_flags : uint16_t {
-	/**
-	 * @brief video quality mode 720p
-	 * This is a dummy value as it does nothing, in comparison to
-	 * c_video_quality_720p which actually sets the bit!
-	 */
-	c_video_quality_auto =	0b0000000000000000,
+
+/** @brief Our flags as stored in the object
+ * @note The bottom four bits of this flag are reserved to contain the channel_type values
+ * listed above as provided by Discord. If discord add another value > 15, we will have to
+ * shuffle these values upwards by one bit.
+ */
+enum channel_flags : uint8_t {
 	/// NSFW Gated Channel
-	c_nsfw =		0b0000000000000001,
-	/// Text channel
-	c_text =		0b0000000000000010,
-	/// Direct Message
-	c_dm =			0b0000000000000100,
-	/// Voice channel
-	c_voice =		0b0000000000001000,
-	/// Group
-	c_group =		0b0000000000010000,
-	/// Category
-	c_category =		0b0000000000100000,
-	/// News channel
-	c_news =		0b0000000001000000,
-	/**
-	 * @brief a channel in which game developers can sell their game on Discord
-	 * @deprecated store channels are deprecated by Discord
-	 */
-	c_store =		0b0000000010000000,
-	/// Stage channel
-	c_stage =		0b0000000011000000,
-	/// News thread
-	c_news_thread =		0b0000000011100000,
-	/// Public thread
-	c_public_thread = 	0b0000000011110000,
-	/// Private thread
-	c_private_thread =	0b0000000011111000,
+	c_nsfw =		0b00010000,
 	/// Video quality forced to 720p
-	c_video_quality_720p =	0b0000000100000000,
+	c_video_quality_720p =	0b00100000,
+	/// Lock permissions (only used when updating channel positions)
+	c_lock_permissions =	0b01000000,
+	/// Thread pinned in a forum (type 15) channel
+	c_pinned_thread =	0b10000000,
+};
+
+/**
+ * @brief The flags in discord channel's raw "flags" field. We use these for serialisation only, right now. Might be better to create a new field than to make the existing channel::flags from uint8_t to uint16_t, if discord adds more flags in future.
+ */
+enum discord_channel_flags : uint8_t {
+	/// Thread pinned in a forum (type 15) channel
+	dc_pinned_thread = 0b00000001,
 };
 
 /**
@@ -99,17 +92,31 @@ enum overwrite_type : uint8_t {
 };
 
 /**
- * @brief channel permission overwrites
+ * @brief Channel permission overwrites
  */
 struct DPP_EXPORT permission_overwrite {
-	/// Overwrite id
+	/// ID of the role or the member
 	snowflake id;
-	/// Allow mask
-	uint64_t allow;
-	/// Deny mask
-	uint64_t deny;
-	/// Overwrite type
+	/// Bitmask of allowed permissions
+	permission allow;
+	/// Bitmask of denied permissions
+	permission deny;
+	/// Type of overwrite. See dpp::overwrite_type
 	uint8_t type;
+
+	/**
+	 * @brief Construct a new permission_overwrite object
+	 */
+	permission_overwrite();
+
+	/**
+	 * @brief Construct a new permission_overwrite object
+	 * @param id ID of the role or the member to create the overwrite for
+	 * @param allow Bitmask of allowed permissions (refer to enum dpp::permissions) for this user/role in this channel
+	 * @param deny Bitmask of denied permissions (refer to enum dpp::permissions) for this user/role in this channel
+	 * @param type Type of overwrite
+	 */
+	permission_overwrite(snowflake id, uint64_t allow, uint64_t deny, overwrite_type type);
 };
 
 
@@ -209,11 +216,8 @@ public:
 	 * it contains the calculated permission bitmask of the user issuing the command
 	 * within this channel.
 	 */
-	uint64_t permissions;
+	permission permissions;
 
-	/** Flags bitmap */
-	uint16_t flags;
-	
 	/** Sorting position, lower number means higher up the list */
 	uint16_t position;
 
@@ -223,6 +227,9 @@ public:
 	/** amount of seconds a user has to wait before sending another message (0-21600); bots, as well as users with the permission manage_messages or manage_channel, are unaffected*/
 	uint16_t rate_limit_per_user;
 
+	/** Flags bitmap */
+	uint8_t flags;
+	
 	/** Maximum user limit for voice channels (0-99) */
 	uint8_t user_limit;
 
@@ -300,6 +307,14 @@ public:
 	channel& set_position(const uint16_t position);
 
 	/**
+	 * @brief Set guild_id of this channel object
+	 *
+	 * @param guild_id Guild ID to set
+	 * @return Reference to self, so these method calls may be chained 
+	 */
+	channel& set_guild_id(const snowflake guild_id);
+
+	/**
 	 * @brief Set parent_id of this channel object
 	 *
 	 * @param parent_id Parent ID to set
@@ -332,6 +347,15 @@ public:
 	channel& set_nsfw(const bool is_nsfw);
 
 	/**
+	 * @brief Set lock permissions property of this channel object
+	 * Used only with the reorder channels method
+	 *
+	 * @param is_lock_permissions true, if we are to inherit permissions from the category
+	 * @return Reference to self, so these method calls may be chained 
+	 */
+	channel& set_lock_permissions(const bool is_lock_permissions);
+
+	/**
 	 * @brief Set rate_limit_per_user of this channel object
 	 *
 	 * @param rate_limit_per_user rate_limit_per_user (slowmode in sec) to set
@@ -343,13 +367,13 @@ public:
 	 * @brief Add a permission_overwrite to this channel object
 	 * 
 	 * @param id ID of the role or the member you want to add overwrite for
-	 * @param type type of overwrite (0 for role, 1 for member)
-	 * @param allowed_permissions bitmask of allowed permissions (refer to enum role_permissions) for this user/role in this channel
-	 * @param denied_permissions bitmask of denied permissions (refer to enum role_permissions) for this user/role in this channel
+	 * @param type type of overwrite
+	 * @param allowed_permissions bitmask of allowed permissions (refer to enum dpp::permissions) for this user/role in this channel
+	 * @param denied_permissions bitmask of denied permissions (refer to enum dpp::permissions) for this user/role in this channel
 	 *
 	 * @return Reference to self, so these method calls may be chained 
 	 */
-	channel& add_permission_overwrite(const snowflake id, const uint8_t type, const uint64_t allowed_permissions, const uint64_t denied_permissions);
+	channel& add_permission_overwrite(const snowflake id, const overwrite_type type, const uint64_t allowed_permissions, const uint64_t denied_permissions);
 
 	/**
 	 * @brief Get the mention ping for the channel
@@ -359,14 +383,25 @@ public:
 	std::string get_mention() const;
 
 	/**
-	 * @brief Get the user permissions for a user on this channel
+	 * @brief Get the user overall permissions for a member on this channel, including channel overwrites.
 	 * 
-	 * @param member The user to return permissions for
-	 * @return uint64_t Permissions bitmask made of bits in role_permissions.
-	 * Note that if the user is not on the channel or the guild is
-	 * not in the cache, the function will always return 0.
+	 * @param user The user to resolve the permissions for
+	 * @return permission Permissions bitmask made of bits in dpp::permissions.
+	 * @note Requires role cache to be enabled (it's enabled by default).
+	 *
+	 * @note The method will search for the guild member in the cache by the users id.
+	 * If the guild member is not in cache, the method will always return 0.
 	 */
-	uint64_t get_user_permissions(const class user* member) const;
+	permission get_user_permissions(const class user* user) const;
+
+	/**
+	 * @brief Get the overall user permissions for a member on this channel, including channel overwrites.
+	 *
+	 * @param member The member to resolve the permissions for
+	 * @return The permission overwrites for the member. Made of bits in dpp::permissions.
+	 * @note Requires role cache to be enabled (it's enabled by default).
+	 */
+	permission get_user_permissions(const class guild_member &member) const;
 
 	/**
 	 * @brief Return a map of members on the channel, built from the guild's
@@ -374,6 +409,7 @@ public:
 	 * Does not return reliable information for voice channels, use
 	 * dpp::channel::get_voice_members() instead for this.
 	 * @return A map of guild members keyed by user id.
+	 * @note If the guild this channel belongs to is not in the cache, the function will always return 0.
 	 */
 	std::map<snowflake, class guild_member*> get_members();
 
@@ -407,6 +443,14 @@ public:
 	 * @return true if NSFW
 	 */
 	bool is_nsfw() const;
+
+	/**
+	 * @brief Returns true if the permissions are to be synched with the category it is in.
+	 * Used only and set manually when using the reorder channels method.
+	 * 
+	 * @return true if keeping permissions
+	 */
+	bool is_locked_permissions() const;
 
 	/**
 	 * @brief Returns true if the channel is a text channel
@@ -444,6 +488,14 @@ public:
 	bool is_category() const;
 
 	/**
+	 * @brief Returns true if the channel is a forum
+	 * @note This feature is not implemented by Discord yet and the name is subject to possible change!
+	 * 
+	 * @return true if a category
+	 */
+	bool is_forum() const;
+
+	/**
 	 * @brief Returns true if the channel is a news channel
 	 * 
 	 * @return true if news channel
@@ -478,6 +530,13 @@ public:
 	 * @return true if video quality is 720p
 	 */
 	bool is_video_720p() const;
+
+	/**
+	 * @brief Returns true if channel is a pinned thread in forum
+	 *
+	 * @return true, if channel is a pinned thread in forum
+	 */
+	bool is_pinned_thread() const;
 
 };
 
@@ -544,7 +603,7 @@ public:
 	 * @param with_id include the ID in the json
 	 * @return std::string JSON string
 	 */
-	virtual std::string build_json(bool with_id = false) const;
+	std::string build_json(bool with_id = false) const;
 
 };
 

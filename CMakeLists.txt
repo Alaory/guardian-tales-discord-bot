@@ -9,7 +9,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include_directories("${CMAKE_SOURCE_DIR}/Dep/include")
 link_directories("${CMAKE_SOURCE_DIR}/Dep")
 
-set(TOKEN "\"TOKEN\"")
+set(TOKEN )
 add_compile_definitions( TOKEN=${TOKEN})
 
 

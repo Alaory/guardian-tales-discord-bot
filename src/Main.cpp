@@ -1,7 +1,6 @@
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "scraper.hpp"
 #include "DataBase.hpp"
-#include <dpp/dpp.h>
 #include "DiscordBot.hpp"
 
 
@@ -9,15 +8,10 @@
 int main(){
     website web("https://ucngame.com","/codes/guardian-tales-coupon-codes/","wp-block-table",MyHTML_TAG_FIGURE);
     firebase::App *app = firebase::App::Create(firebase::AppOptions());
-
-    //std::string toke = TOKEN;
-    //DBot botme(toke);
-    std::vector<Coupon> cod = web.scrap_codes();std::vector<std::string> codes;
-    DataUp dp(app);
+    DataUp data(app);
+    UpdateCodeFromJson();
+    DBot bot(TOKEN);
     
-
-    dp.saveData(cod);
-    std::cin.get();
-    //botme.start();
+    bot.start();
     return 0;
 }

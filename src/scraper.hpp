@@ -1,6 +1,7 @@
 #ifndef scraper
 #define scraper
 #include "dpp/utility.h"
+#include <dpp/nlohmann/json.hpp>
 #include <chrono>
 #include <string>
 #include <httplib.h>

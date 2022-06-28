@@ -24,6 +24,7 @@
 #include <dpp/managed.h>
 #include <dpp/utility.h>
 #include <dpp/voicestate.h>
+#include <dpp/permissions.h>
 #include <string>
 #include <unordered_map>
 #include <dpp/json_interface.h>
@@ -125,7 +126,20 @@ enum guild_flags : uint32_t {
 };
 
 /**
- * @brief Various flags that can be used to indicate the status of a guild member
+ * @brief Additional boolean flag values for guild, as guild_flags is full
+ */
+enum guild_flags_extra : uint8_t {
+	/** Guild has premium progress bar enabled */
+	g_premium_progress_bar_enabled =	0b00000001,
+	/** Guild can have an animated banner (doesn't mean it actually has one though) */
+	g_animated_banner =			0b00000010,
+	/** Guild has auto moderation */
+	g_auto_moderation =			0b00000100,
+};
+
+/**
+ * @brief Various flags that can be used to indicate the status of a guild member.
+ * @note Use set_mute and set_deaf member functions and do not toggle the bits yourself.
  */
 enum guild_member_flags : uint8_t {
 	/** Member deafened in voice channels */
@@ -136,6 +150,8 @@ enum guild_member_flags : uint8_t {
 	gm_pending =		0b00100,
 	/** Member has animated guild-specific avatar */
 	gm_animated_avatar = 	0b01000,
+	/** gm_deaf or gm_mute has been toggled */
+	gm_voice_action = 			0b10000,
 };
 
 /**
@@ -370,7 +386,7 @@ public:
 	/** Guild name */
 	std::string name;
 
-	/** Server description for communities */
+	/** Server description */
 	std::string description;
 
 	/**
@@ -491,6 +507,11 @@ public:
 	 */
 	guild_nsfw_level_t nsfw_level;
 
+	/**
+	 * @brief Additional flags
+	 */
+	uint8_t flags_extra;
+
 	/** Default constructor, zeroes all values */
 	guild();
 
@@ -516,28 +537,61 @@ public:
 	 * @param with_id True if an ID is to be included in the JSON
 	 * @return JSON string
 	 */
-	virtual std::string build_json(bool with_id = false) const;
+	std::string build_json(bool with_id = false) const;
 
 	/**
-	 * @brief Get the base permissions for a member on this guild,
-	 * before permission overwrites are applied.
+	 * @brief Compute the base permissions for a member on this guild,
+	 * before channel overwrites are applied.
+	 * This method takes into consideration the following cases:
+	 *   - Guild owner
+	 *   - Guild roles including \@everyone
+	 *
+	 * @param user User to get permissions for
+	 * @return permission permissions bitmask
+	 * @note Requires role cache to be enabled (it's enabled by default).
+	 *
+	 * @note The method will search for the guild member in the cache by the users id.
+	 * If the guild member is not in cache, the method will always return 0.
+	 */
+	permission base_permissions(const class user* user) const;
+
+	/**
+	 * @brief Compute the base permissions for a member on this guild,
+	 * before channel overwrites are applied.
+	 * This method takes into consideration the following cases:
+	 *   - Guild owner
+	 *   - Guild roles including \@everyone
 	 *
 	 * @param member member to get permissions for
-	 * @return uint64_t permissions bitmask
+	 * @return permission permissions bitmask
+	 * @note Requires role cache to be enabled (it's enabled by default).
 	 */
-	uint64_t base_permissions(const class user* member) const;
+	permission base_permissions(const guild_member &member) const;
 
 	/**
-	 * @brief Get the permission overwrites for a member
-	 * merged into a bitmask.
+	 * @brief Compute the permission overwrites for a member in a channel, including base permissions.
 	 *
 	 * @param base_permissions base permissions before overwrites,
 	 * from channel::base_permissions
-	 * @param member Member to fetch permissions for
-	 * @param channel Channel to fetch permissions against
-	 * @return uint64_t Merged permissions bitmask of overwrites.
+	 * @param user User to resolve the permissions for
+	 * @param channel Channel to compute permission overwrites for
+	 * @return permission Merged permissions bitmask of overwrites.
+	 * @note Requires role cache to be enabled (it's enabled by default).
+	 *
+	 * @note The method will search for the guild member in the cache by the users id.
+	 * If the guild member is not in cache, the method will always return 0.
 	 */
-	uint64_t permission_overwrites(const uint64_t base_permissions, const user*  member, const channel* channel) const;
+	permission permission_overwrites(const uint64_t base_permissions, const user* user, const channel* channel) const;
+
+	/**
+	 * @brief Compute the permission overwrites for a member in a channel, including base permissions.
+	 *
+	 * @param member Member to resolve the permissions for
+	 * @param channel Channel to compute permission overwrites for
+	 * @return permission Merged permissions bitmask of overwrites.
+	 * @note Requires role cache to be enabled (it's enabled by default).
+	 */
+	permission permission_overwrites(const guild_member &member, const channel &channel) const;
 
 	/**
 	 * @brief Rehash members map
@@ -554,37 +608,37 @@ public:
 	 */
 	bool connect_member_voice(snowflake user_id, bool self_mute = false, bool self_deaf = false);
 
-    /**
+	/**
 	 * @brief Get the banner url of the guild if it have one, otherwise returns an empty string
 	 *
 	 * @param size The size of the banner in pixels. It can be any power of two between 16 and 4096. if not specified, the default sized banner is returned.
 	 * @return std::string banner url or empty string
 	 */
-    std::string get_banner_url(uint16_t size = 0) const;
+	std::string get_banner_url(uint16_t size = 0) const;
 
-    /**
+	/**
 	 * @brief Get the discovery splash url of the guild if it have one, otherwise returns an empty string
 	 *
 	 * @param size The size of the discovery splash in pixels. It can be any power of two between 16 and 4096. if not specified, the default sized discovery splash is returned.
 	 * @return std::string discovery splash url or empty string
 	 */
-    std::string get_discovery_splash_url(uint16_t size = 0) const;
+	std::string get_discovery_splash_url(uint16_t size = 0) const;
 
-    /**
+	/**
 	 * @brief Get the icon url of the guild if it have one, otherwise returns an empty string
 	 *
 	 * @param size The size of the icon in pixels. It can be any power of two between 16 and 4096. if not specified, the default sized icon is returned.
 	 * @return std::string icon url or empty string
 	 */
-    std::string get_icon_url(uint16_t size = 0) const;
+	std::string get_icon_url(uint16_t size = 0) const;
 
-    /**
+	/**
 	 * @brief Get the splash url of the guild if it have one, otherwise returns an empty string
 	 *
 	 * @param size The size of the splash in pixels. It can be any power of two between 16 and 4096. if not specified, the default sized splash is returned.
 	 * @return std::string splash url or empty string
 	 */
-    std::string get_splash_url(uint16_t size = 0) const;
+	std::string get_splash_url(uint16_t size = 0) const;
 
 	/**
 	 * @brief Set the name of the guild in the object
@@ -614,19 +668,19 @@ public:
 	bool widget_enabled() const;
 
 	/**
-	 * @brief Guild has an invite splash
-	 * @return bool has an invite splash
+	 * @brief Guild has access to set an invite splash background
+	 * @return bool can have an invite splash
 	 */
 	bool has_invite_splash() const;
 
 	/**
-	 * @brief Guild has VIP voice regions
-	 * @return bool has vip regions
+	 * @brief Guild has access to set 384kbps bitrate in voice
+	 * @return bool can have VIP voice regions
 	 */
 	bool has_vip_regions() const;
 
 	/**
-	 * @brief Guild can have a vanity url
+	 * @brief Guild has access to set a vanity URL
 	 * @return bool can have vanity url
 	 */
 	bool has_vanity_url() const;
@@ -650,14 +704,14 @@ public:
 	bool is_community() const;
 
 	/**
-	 * @brief Guild has commerce channels
-	 * @return bool has commerce guilds
+	 * @brief Guild has access to use commerce features
+	 * @return bool has commerce features enabled
 	 */
 	bool has_commerce() const;
 
 	/**
-	 * @brief Guild has news channels
-	 * @return bool has news channels
+	 * @brief Guild has access to create news channels
+	 * @return bool has news channels features enabled
 	 */
 	bool has_news() const;
 
@@ -674,14 +728,26 @@ public:
 	bool is_featureable() const;
 
 	/**
-	 * @brief Guild can have an animated icon
+	 * @brief Guild has access to set an animated guild banner image
+	 * @return bool can have animated banner image
+	 */
+	bool has_animated_banner() const;
+
+	/**
+	 * @brief Guild has auto moderation features
+	 * @return bool has auto moderation features
+	 */
+	bool has_auto_moderation() const;
+
+	/**
+	 * @brief Guild has access to set an animated guild icon
 	 * @return bool can have animated icon
 	 */
 	bool has_animated_icon() const;
 
 	/**
-	 * @brief Guild has a banner image
-	 * @return bool has banner image
+	 * @brief Guild has access to set a guild banner image
+	 * @return bool can have banner image
 	 */
 	bool has_banner() const;
 
@@ -692,7 +758,7 @@ public:
 	bool is_welcome_screen_enabled() const;
 
 	/**
-	 * @brief Guild has membership screening
+	 * @brief Guild has enabled membership screening
 	 * @return bool has membership screening
 	 */
 	bool has_member_verification_gate() const;
@@ -710,10 +776,10 @@ public:
 	bool has_animated_icon_hash() const;
 
 	/**
-	 * @brief Guild banner is animated gif
+	 * @brief Guild banner is actually an animated gif
 	 * @return bool is animated gif
 	 */
-	bool has_animated_banner_icon_hash() const;
+	bool has_animated_banner_hash() const;
 
 
 	/**
@@ -763,6 +829,12 @@ public:
 	 * @return bool has channel banners
 	 */
 	bool has_channel_banners() const;
+
+	/**
+	 * @brief True if the premium progress bar is enabled
+	 * @return bool has progress bar enabled
+	 */
+	bool has_premium_progress_bar_enabled() const;
 };
 
 /** A container of guilds */
@@ -802,7 +874,7 @@ public:
 	 * @param with_id Add ID to output
 	 * @return std::string guild widget stringified json
 	 */
-	virtual std::string build_json(bool with_id = false) const;
+	std::string build_json(bool with_id = false) const;
 };
 
 /**

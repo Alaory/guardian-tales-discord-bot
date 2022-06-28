@@ -75,7 +75,7 @@ enum component_style : uint8_t {
 /**
  * @brief An option for a select component
  */
-struct DPP_EXPORT select_option {
+struct DPP_EXPORT select_option : public json_interface<select_option> {
 	/**
 	 * @brief Label for option
 	 */
@@ -126,6 +126,11 @@ struct DPP_EXPORT select_option {
 	 * @brief Construct a new select option object
 	 */
 	select_option();
+
+	/**
+	 * @brief Destructs the select option object.
+	 */
+	virtual ~select_option() = default;
 
 	/**
 	 * @brief Construct a new select option object
@@ -185,6 +190,12 @@ struct DPP_EXPORT select_option {
 	 * @return select_option& reference to self for chaining
 	 */
 	select_option& set_animated(bool anim);
+
+	/** Read class values from json object
+	 * @param j A json object to read from
+	 * @return A reference to self
+	 */
+	select_option& fill_from_json(nlohmann::json* j);
 };
 
 /**
@@ -271,7 +282,8 @@ public:
 	 */
 	bool required;
 
-	/** Current value (only filled or valid when populated from an on_form_submit event)
+	/** Value of the modal (filled or valid when populated from an
+	 * on_form_submit event, or from the set_value function)
 	 */
 	std::variant<std::monostate, std::string, int64_t, double> value;
 
@@ -342,6 +354,16 @@ public:
 	component& set_label(const std::string &label);
 
 	/**
+	 * @brief Set the default value of the text input component.
+	 * For action rows, this field is ignored. Setting the
+	 * value will auto-set the type to dpp::cot_text.
+	 *
+	 * @param val Value text to set. It will be truncated to the maximum length of 4000 UTF-8 characters.
+	 * @return component& Reference to self
+	 */
+	component& set_default_value(const std::string &val);
+
+	/**
 	 * @brief Set the url for dpp::cos_link types.
 	 * Calling this function sets the style to dpp::cos_link
 	 * and the type to dpp::cot_button.
@@ -384,9 +406,20 @@ public:
 	component& set_disabled(bool disable);
 
 	/**
+	 * @brief Set if this component is required.
+	 * Defaults to false on all created components.
+	 *
+	 * @param require True to require this, false to make it optional.
+	 * @return component& Reference to self
+	 */
+	component& set_required(bool require);
+
+	/**
 	 * @brief Set the placeholder
 	 * 
-	 * @param placeholder placeholder string. It will be truncated to the maximum length of 150 UTF-8 characters.
+	 * @param placeholder placeholder string. It will be truncated to the
+	 * maximum length of 150 UTF-8 characters for select menus, and 100 UTF-8
+	 * characters for modals.
 	 * @return component& Reference to self
 	 */
 	component& set_placeholder(const std::string &placeholder);
@@ -929,6 +962,42 @@ enum message_flags {
 };
 
 /**
+ * @brief Represents possible values for the dpp::embed type field.
+ * These are loosely defined by the API docs and do not influence how the client renders embeds.
+ * The only type a bot can send is dpp::embed_type::emt_rich.
+ */
+namespace embed_type {
+	/**
+	 * @brief Rich text
+	 */
+	const std::string emt_rich = "rich";
+	/**
+	 * @brief Image
+	 */
+	const std::string emt_image = "image";
+	/**
+	 * @brief Video link
+	 */
+	const std::string emt_video = "video";
+	/**
+	 * @brief Animated gif
+	 */
+	const std::string emt_gifv = "gifv";
+	/**
+	 * @brief Article
+	 */
+	const std::string emt_article = "article";
+	/**
+	 * @brief Link URL
+	 */
+	const std::string emt_link = "link";
+	/**
+	 * @brief Auto moderation filter
+	 */
+	const std::string emt_automod = "auto_moderation_message";
+};
+
+/**
  * @brief Message types for dpp::message::type
  */
 enum message_type {
@@ -977,7 +1046,9 @@ enum message_type {
 	/// Invite reminder
 	mt_guild_invite_reminder			= 22,
 	/// Context Menu Command
-	mt_context_menu_command 			= 23
+	mt_context_menu_command 			= 23,
+	/// Auto moderation action
+	mt_auto_moderation_action			= 24,
 };
 
 /**
@@ -1120,19 +1191,19 @@ struct DPP_EXPORT message : public managed {
 	 */
 	struct allowed_ref {
 		/**
-		 * @brief Set to true to parse user mentions in the text
+		 * @brief Set to true to parse user mentions in the text. Default is false
 		 */
 		bool parse_users;
 		/**
-		 * @brief Set to true to at-everyone and at-here mentions in the text
+		 * @brief Set to true to at-everyone and at-here mentions in the text. Default is false
 		 */
 		bool parse_everyone;
 		/**
-		 * @brief Set to true to parse role mentions in the text
+		 * @brief Set to true to parse role mentions in the text. Default is false
 		 */
 		bool parse_roles;
 		/**
-		 * @brief Set to true to mention the user who sent the message this one is replying to
+		 * @brief Set to true to mention the user who sent the message this one is replying to. Default is false
 		 */
 		bool replied_user;
 		/**
@@ -1230,7 +1301,7 @@ struct DPP_EXPORT message : public managed {
 	 * This will exclude some fields that are not valid in interactions at this time.
 	 * @return The JSON text of the message
 	 */
-	std::string build_json(bool with_id = false, bool is_interaction_response = false) const;
+	virtual std::string build_json(bool with_id = false, bool is_interaction_response = false) const;
 
 	/**
 	 * @brief Returns true if the message was crossposted to other servers
@@ -1325,6 +1396,7 @@ struct DPP_EXPORT message : public managed {
 	 * 
 	 * @param fn filename
 	 * @return message& reference to self
+	 * @deprecated Use message::add_file instead
 	 */
 	message& set_filename(const std::string &fn);
 
@@ -1333,6 +1405,7 @@ struct DPP_EXPORT message : public managed {
 	 * 
 	 * @param fc raw file content contained in std::string
 	 * @return message& reference to self
+	 * @deprecated Use message::add_file instead
 	 */
 	message& set_file_content(const std::string &fc);
 
@@ -1352,6 +1425,29 @@ struct DPP_EXPORT message : public managed {
 	 * @return message& reference to self
 	 */
 	message& set_content(const std::string &c);
+	
+	/**
+	 * @brief Set the channel id
+	 * 
+	 * @param _channel_id channel id
+	 * @return message& reference to self
+	 */
+	message& set_channel_id(snowflake _channel_id);
+
+	/**
+	 * @brief Set the channel id
+	 * 
+	 * @param _guild_id channel id
+	 * @return message& reference to self
+	 */
+	message& set_guild_id(snowflake _guild_id);
+
+	/**
+	 * @brief Returns true if the message is from a DM
+	 * 
+	 * @return true if message is a DM
+	 */
+	bool is_dm() const;
 };
 
 /** A group of messages */

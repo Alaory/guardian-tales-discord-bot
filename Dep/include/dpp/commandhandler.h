@@ -2,7 +2,7 @@
  *
  * D++, A Lightweight C++ library for Discord
  *
- * Copyright 2021 Craig Edwards and D++ contributors 
+ * Copyright 2021 Craig Edwards and D++ contributors
  * (https://github.com/brainboxdotcc/DPP/graphs/contributors)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,6 +28,7 @@
 #include <dpp/role.h>
 #include <dpp/appcommand.h>
 #include <dpp/dispatcher.h>
+#include <dpp/utility.h>
 #include <dpp/nlohmann/json_fwd.hpp>
 #include <unordered_map>
 #include <vector>
@@ -280,7 +281,7 @@ public:
 	 * @brief Construct a new commandhandler object
 	 * 
 	 * @param o Owning cluster to attach to
-	 * @param auto_hook_events Set to true to automatically hook the on_interaction_create
+	 * @param auto_hook_events Set to true to automatically hook the on_slashcommand
 	 * and on_message events. You should not need to set this to false unless you have a specific
 	 * use case, as D++ supports multiple listeners to an event, so will allow the commandhandler
 	 * to hook to your command events without disrupting other uses for the events you may have.
@@ -334,10 +335,6 @@ public:
 	 * Note that if you have previously registered your commands and they have not changed, you do
 	 * not need to call this again. Discord retains a cache of previously added commands.
 	 * 
-	 * @note Registration of global slash commands can take up to an hour to appear on Discord.
-	 * This is a Discord API limitation. For rapid testing use guild specific commands by specifying
-	 * a guild ID when declaring the command.
-	 * 
 	 * @return commandhandler& Reference to self for chaining method calls
 	 */
 	commandhandler& register_commands();
@@ -352,13 +349,13 @@ public:
 	void route(const struct dpp::message_create_t& event);
 
 	/**
-	 * @brief Route a command from the on_interaction_create function.
-	 * Call this method from your on_interaction_create with the received
+	 * @brief Route a command from the on_slashcommand function.
+	 * Call this method from your on_slashcommand with the received
 	 * dpp::interaction_create_t object if you have disabled automatic registration of events.
 	 * 
 	 * @param event command interaction event to parse
 	 */
-	void route(const struct interaction_create_t & event);
+	void route(const struct slashcommand_t & event);
 
 	/**
 	 * @brief Reply to a command.
@@ -371,7 +368,7 @@ public:
 	 * @param source source of the command
 	 * @param callback User function to execute when the api call completes.
 	 */
-	void reply(const dpp::message &m, command_source source, command_completion_event_t callback = {});
+	void reply(const dpp::message &m, command_source source, command_completion_event_t callback = utility::log_error());
 
 	/**
 	 * @brief Reply to a command without a message, causing the discord client
@@ -384,10 +381,10 @@ public:
 	 * @param source source of the command
 	 * @param callback User function to execute when the api call completes.
 	 */
-	void thinking(command_source source, command_completion_event_t callback = {});
+	void thinking(command_source source, command_completion_event_t callback = utility::log_error());
 
 	/* Easter egg */
-	void thonk(command_source source, command_completion_event_t callback = {});
+	void thonk(command_source source, command_completion_event_t callback = utility::log_error());
 
 };
 
