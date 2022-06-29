@@ -31,7 +31,7 @@ public:
         if (dpp::run_once<struct register_bot_commands>()) {
             std::cout << "Bot Started \n";
             dpp::slashcommand sl = dpp::slashcommand("getcodes","Check and get the last Coupon Codes",bot->me.id);
-            dpp::slashcommand dsl = dpp::slashcommand("SeeDataBase","view the old coupon codes",bot->me.id);
+            dpp::slashcommand dsl = dpp::slashcommand("see_coupon_list","view the old coupon codes",bot->me.id);
             std::vector<dpp::slashcommand> commands;
             commands.push_back(dsl);
             commands.push_back(sl);
