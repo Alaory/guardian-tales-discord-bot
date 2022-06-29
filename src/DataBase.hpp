@@ -62,6 +62,9 @@ public:
 
 
 
+
+
+
 inline void UpdateSaveCodeToJson(std::vector<Coupon> & codes){
     std::cout << "updataing json file\n";
     nlohmann::json jf;
@@ -86,6 +89,10 @@ inline void UpdateSaveCodeToJson(std::vector<Coupon> & codes){
     fileData_tosave = jf.dump();
     DataUp::saveData(fileData_tosave,DataUp::couponfile);
 }
+
+
+
+
 
 inline void UpdateCodeFromJson(){
     std::string CodeJson;

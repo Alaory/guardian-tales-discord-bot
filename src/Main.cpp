@@ -10,7 +10,9 @@ int main(){
     firebase::App *app = firebase::App::Create(firebase::AppOptions());
     DataUp data(app);
     UpdateCodeFromJson();
-    DBot bot(TOKEN,&web);
+    DBot bot(TOKEN);
+
+    
     
     bot.start();
     return 0;

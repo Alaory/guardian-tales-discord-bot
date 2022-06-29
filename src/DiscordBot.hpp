@@ -12,14 +12,11 @@
 class DBot{
 public:
     dpp::cluster* bot;
-    website *web;
-    DBot(const std::string token,website * wb = nullptr){
-    web = wb;
+    DBot(const std::string token){
     bot = new dpp::cluster(token);
     bot->on_slashcommand([&](const dpp::slashcommand_t & sl){
-        std::cout << sl.command.get_command_name() << '\n';
+        std::cout << "command naamed "<<sl.command.get_command_name() << " used by "<<sl.command.usr.username << '\n';
         if(sl.command.get_command_name() == "getcodes"){
-            
             dpp::embed em;
             em.set_title("Coupon Codes");
             std::vector<Coupon> code = DataUp::CodeStroage;
@@ -34,7 +31,9 @@ public:
         if (dpp::run_once<struct register_bot_commands>()) {
             std::cout << "Bot Started \n";
             dpp::slashcommand sl = dpp::slashcommand("getcodes","Check and get the last Coupon Codes",bot->me.id);
+            dpp::slashcommand dsl = dpp::slashcommand("SeeDataBase","view the old coupon codes",bot->me.id);
             std::vector<dpp::slashcommand> commands;
+            commands.push_back(dsl);
             commands.push_back(sl);
             bot->global_bulk_command_create(commands);
         }
