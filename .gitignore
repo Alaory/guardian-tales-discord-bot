@@ -1,3 +1,4 @@
 google/
 build/
+.cache/
 .env
