@@ -24,7 +24,7 @@ public:
     DataUp(firebase::App *ap){
         app = ap;
         data = firebase::storage::Storage::GetInstance(app);
-        couponfile = data->GetReferenceFromUrl("gs://discord-app-bot.appspot.com/hello.txt");
+        couponfile = data->GetReferenceFromUrl("gs://discord-app-bot.appspot.com/Coupon.json");
         userfile = data->GetReferenceFromUrl("gs://discord-app-bot.appspot.com/User.json");
         std::cout << "construction done for database\n";
     }
