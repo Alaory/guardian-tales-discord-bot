@@ -15,15 +15,11 @@ int main(){
 
 
     Bosma::Scheduler sch(1);
-    sch.every(std::chrono::seconds(15), [&](){
+    sch.every(std::chrono::hours(6), [&](){
         std::cout << "updateing database\n";
-        UpdateSaveCodeToJson(web.scrap_codes());
-    });
-    sch.every(std::chrono::hours(1),[&](){
-        std::cout << "retreving database\n";
+        SaveCouponCodes_toCloud(web.scrap_codes());
         UpdateCodeFromJson();
     });
-
     
     bot.start();
     return 0;

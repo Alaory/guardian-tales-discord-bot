@@ -65,36 +65,36 @@ public:
 
 
 
-inline void UpdateSaveCodeToJson(std::vector<Coupon> & codes){
+inline void SaveCouponCodes_toCloud(std::vector<Coupon> & codes){
     std::cout << "updataing json file\n";
     nlohmann::json jf;
     jf["size"] = codes.size();
     std::string fileData_tosave;
-    
     nlohmann::json datacode;
 
+    for (int i=0; i<DataUp::CodeStroage.size(); i++) {
+        datacode["Code"] = DataUp::CodeStroage[i].code;
+        datacode["Des"] = DataUp::CodeStroage[i].des;
+        jf["list"].push_back(datacode);
+    }
+    std::cout << jf.dump() << '\n';
 
-    for(int i=0;i<codes.size();i++){
-        std::cout << "i see thiscode " << codes[i].code << '\n';
-
+    for (int i=0; i<codes.size(); i++) {
         bool found = false;
 
-        datacode["Code"] = codes[i].code;
-        datacode["Dis"] = codes[i].des;
-
-
         for(int j=0;j<DataUp::CodeStroage.size();j++){
-            std::cout << DataUp::CodeStroage[j].code  << " checking "<< '\n';
-            if(DataUp::CodeStroage[j].code == codes[i].code){
+            if(codes[i].code == DataUp::CodeStroage[j].code){
                 found = true;
-                break;
             }
         }
-
         if(!found){
+            datacode["Code"] = codes[i].code;
+            datacode["Des"]  = codes[i].des;
             jf["list"].insert(jf["list"].begin(),datacode);
         }
     }
+
+
         
     fileData_tosave = jf.dump();
     
@@ -107,24 +107,34 @@ inline void UpdateSaveCodeToJson(std::vector<Coupon> & codes){
 
 inline void UpdateCodeFromJson(){
     std::string CodeJson;
+
     DataUp::Getdata(CodeJson,DataUp::couponfile);
+
     DataUp::CodeStroage.clear();
+    
     for(int i=0;i<3;i++){ 
+
     if(CodeJson.length() <=0){
         std::this_thread::sleep_for(std::chrono::seconds(4));//this is bad very bad. i got no other idea of how to solve it.if you do well tell me. i am NOT asking 
     }
+
     try {
         nlohmann::json j = nlohmann::json::parse(CodeJson);
         int size = j["size"];
+        
         for(int i=0;i<size;i++){
             Coupon code;
             code.code = j["list"][i]["Code"];
             code.des = j["list"][i]["Dis"];
             DataUp::CodeStroage.push_back(code);
         }
+
         break;
+
     }catch(std::exception & e){
+
         std::cout << e.what() << '\n';
+
     }}
 }
 
