@@ -31,7 +31,7 @@ public:
 
 
     static void saveData(std::string & toSave,StorageReference & SaveTo){
-        //std::cout << fileData_tosave << '\n';
+        std::cout << "saving ..." << '\n';
         SaveTo.PutBytes(toSave.c_str(),toSave.size()).OnCompletion([](const firebase::Future<firebase::storage::Metadata> & metadata){
             if(metadata.result()->size_bytes() < 0){
                 std::cout << "FAILED TO SAVE FILE\n";
@@ -72,21 +72,32 @@ inline void UpdateSaveCodeToJson(std::vector<Coupon> & codes){
     std::string fileData_tosave;
     
     nlohmann::json datacode;
+
+
     for(int i=0;i<codes.size();i++){
+        std::cout << "i see thiscode " << codes[i].code << '\n';
+
         bool found = false;
+
         datacode["Code"] = codes[i].code;
         datacode["Dis"] = codes[i].des;
-        for(int i=0;i<DataUp::CodeStroage.size();i++){
-            if(DataUp::CodeStroage[i].code == codes[i].code){
+
+
+        for(int j=0;j<DataUp::CodeStroage.size();j++){
+            std::cout << DataUp::CodeStroage[j].code  << " checking "<< '\n';
+            if(DataUp::CodeStroage[j].code == codes[i].code){
                 found = true;
                 break;
             }
         }
-        if(!found)
-            jf["list"].push_back(datacode);
+
+        if(!found){
+            jf["list"].insert(jf["list"].begin(),datacode);
+        }
     }
         
     fileData_tosave = jf.dump();
+    
     DataUp::saveData(fileData_tosave,DataUp::couponfile);
 }
 

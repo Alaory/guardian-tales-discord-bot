@@ -1,3 +1,4 @@
+#include <chrono>
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "scraper.hpp"
 #include "DataBase.hpp"
@@ -14,9 +15,13 @@ int main(){
 
 
     Bosma::Scheduler sch(1);
-    sch.every(std::chrono::hours(5), [&](){
+    sch.every(std::chrono::seconds(15), [&](){
         std::cout << "updateing database\n";
         UpdateSaveCodeToJson(web.scrap_codes());
+    });
+    sch.every(std::chrono::hours(1),[&](){
+        std::cout << "retreving database\n";
+        UpdateCodeFromJson();
     });
 
     
