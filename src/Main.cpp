@@ -13,9 +13,8 @@ int main(){
     DBot bot(TOKEN);
     
 
-
     Bosma::Scheduler sch(1);
-    sch.every(std::chrono::hours(6), [&](){
+    sch.every(std::chrono::seconds(15), [&](){
         std::cout << "updateing database\n";
         SaveCouponCodes_toCloud(web.scrap_codes());
         UpdateCodeFromJson();

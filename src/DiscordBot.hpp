@@ -9,6 +9,8 @@
 #include "scraper.hpp"
 #include <dpp/dpp.h>
 #include <future>
+#include <string>
+#include <variant>
 #include <vector>
 
 class DBot{
@@ -30,16 +32,26 @@ public:
             }else{
                 sl.reply(dpp::message().add_embed(em));
             }
+        }else if (sl.command.get_command_name() == "userid") {
+            sl.reply(dpp::message(std::get<std::string>(sl.get_parameter("userid"))));
+        }
+        else {
+            sl.reply(dpp::message("Command Not Found"));
         }
     });
 
     bot->on_ready([&](const dpp::ready_t & event){
         if (dpp::run_once<struct register_bot_commands>()) {
             std::cout << "Bot Started \n";
+            
             dpp::slashcommand sl = dpp::slashcommand("getcodes","Check and get the last Coupon Codes",bot->me.id);
-            dpp::slashcommand dsl = dpp::slashcommand("see_coupon_list","view the old coupon codes",bot->me.id);
+            dpp::slashcommand CR = dpp::slashcommand("register","register your user number to get into the auto redeem code list",bot->me.id)
+            .add_option(dpp::command_option(dpp::command_option_type::co_string,"userid","enter your user id from the game",true));
+            
             std::vector<dpp::slashcommand> commands;
-            commands.push_back(dsl);
+
+
+
             commands.push_back(sl);
             bot->global_bulk_command_create(commands);
         }

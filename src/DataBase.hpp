@@ -9,12 +9,15 @@
 #include <functional>
 #include <firebase/app.h>
 #include <firebase/storage.h>
+
 using firebase::storage::Storage;
 using firebase::storage::StorageReference;
 
 
 class DataUp{
 public:
+    DataUp(const DataUp&) = delete;//no copy contructor. bad for me 
+
     inline static firebase::App * app = nullptr;
     inline static Storage *data = nullptr;
     inline static StorageReference couponfile;
@@ -30,7 +33,7 @@ public:
     }
 
 
-    static void saveData(std::string & toSave,StorageReference & SaveTo){
+    static void saveData(std::string  toSave,StorageReference & SaveTo){
         std::cout << "saving ..." << '\n';
         SaveTo.PutBytes(toSave.c_str(),toSave.size()).OnCompletion([](const firebase::Future<firebase::storage::Metadata> & metadata){
             if(metadata.result()->size_bytes() < 0){
@@ -54,7 +57,12 @@ public:
                 SaveTo = buf;
             }
         });   
+
     }
+
+
+
+
     ~DataUp(){
 
     }
@@ -68,6 +76,7 @@ public:
 inline void SaveCouponCodes_toCloud(std::vector<Coupon> & codes){
     std::cout << "updataing json file\n";
     nlohmann::json jf;
+    jf["list"] = "[]";
     jf["size"] = codes.size();
     std::string fileData_tosave;
     nlohmann::json datacode;
@@ -88,16 +97,24 @@ inline void SaveCouponCodes_toCloud(std::vector<Coupon> & codes){
             }
         }
         if(!found){
-            datacode["Code"] = codes[i].code;
-            datacode["Des"]  = codes[i].des;
-            jf["list"].insert(jf["list"].begin(),datacode);
+            try {
+            
+                datacode["Code"] = codes[i].code;
+                datacode["Des"]  = codes[i].des;
+                std::cout << jf["list"].begin()->dump() << '\n';
+                jf["list"].insert(jf["list"].begin(),datacode);
+            
+            } catch (std::exception e) {
+                
+                std::cout << e.what() << '\n';
+            }
+            
         }
     }
 
 
         
     fileData_tosave = jf.dump();
-    
     DataUp::saveData(fileData_tosave,DataUp::couponfile);
 }
 
@@ -115,7 +132,7 @@ inline void UpdateCodeFromJson(){
     for(int i=0;i<3;i++){ 
 
     if(CodeJson.length() <=0){
-        std::this_thread::sleep_for(std::chrono::seconds(4));//this is bad very bad. i got no other idea of how to solve it.if you do well tell me. i am NOT asking 
+        std::this_thread::sleep_for(std::chrono::seconds(4));//this is bad very bad. i got no other idea of how to solve it.if you do well... TELL ME. i am NOT asking 
     }
 
     try {
@@ -132,7 +149,7 @@ inline void UpdateCodeFromJson(){
         break;
 
     }catch(std::exception & e){
-
+        
         std::cout << e.what() << '\n';
 
     }}
