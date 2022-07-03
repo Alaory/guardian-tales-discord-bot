@@ -1,5 +1,6 @@
 #ifndef database
 #define database
+#include "dpp/nlohmann/json.hpp"
 #include "scraper.hpp"
 #include <chrono>
 #include <exception>
@@ -33,8 +34,7 @@ public:
     }
 
 
-    static void saveData(std::string  toSave,StorageReference & SaveTo){
-        std::cout << "saving ..." << '\n';
+    static void saveData(std::string toSave,StorageReference & SaveTo){
         SaveTo.PutBytes(toSave.c_str(),toSave.size()).OnCompletion([](const firebase::Future<firebase::storage::Metadata> & metadata){
             if(metadata.result()->size_bytes() < 0){
                 std::cout << "FAILED TO SAVE FILE\n";
@@ -70,24 +70,25 @@ public:
 
 
 
-
-
-
+/*
+takes a coupon vector and
+turn it into a json file 
+then uploads it via the 
+DataUp::savedata function
+*/
 inline void SaveCouponCodes_toCloud(std::vector<Coupon> & codes){
     std::cout << "updataing json file\n";
     nlohmann::json jf;
-    jf["list"] = "[]";
-    jf["size"] = codes.size();
     std::string fileData_tosave;
     nlohmann::json datacode;
+    std::vector<nlohmann::json> temp;
 
     for (int i=0; i<DataUp::CodeStroage.size(); i++) {
         datacode["Code"] = DataUp::CodeStroage[i].code;
         datacode["Des"] = DataUp::CodeStroage[i].des;
-        jf["list"].push_back(datacode);
+        temp.push_back(datacode);
     }
-    std::cout << jf.dump() << '\n';
-
+    
     for (int i=0; i<codes.size(); i++) {
         bool found = false;
 
@@ -101,9 +102,8 @@ inline void SaveCouponCodes_toCloud(std::vector<Coupon> & codes){
             
                 datacode["Code"] = codes[i].code;
                 datacode["Des"]  = codes[i].des;
-                std::cout << jf["list"].begin()->dump() << '\n';
-                jf["list"].insert(jf["list"].begin(),datacode);
-            
+                temp.push_back(datacode);
+                
             } catch (std::exception e) {
                 
                 std::cout << e.what() << '\n';
@@ -112,16 +112,29 @@ inline void SaveCouponCodes_toCloud(std::vector<Coupon> & codes){
         }
     }
 
+    try{
+        jf["list"] = temp;
+        jf["size"] = codes.size();
+    }catch(std::exception e){
+        std::cout << e.what() << '\n';
+    }
 
         
     fileData_tosave = jf.dump();
+    
     DataUp::saveData(fileData_tosave,DataUp::couponfile);
 }
 
 
 
 
+/*
 
+downloads the Coupon file from
+the database and pasre it into 
+a coupon vector
+
+*/
 inline void UpdateCodeFromJson(){
     std::string CodeJson;
 
