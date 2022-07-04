@@ -9,6 +9,7 @@
 
 struct Coupon{
     std::string code,des;
+    bool isNew = false;
 };
 
 class website{

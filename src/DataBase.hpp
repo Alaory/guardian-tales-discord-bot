@@ -90,6 +90,7 @@ inline void SaveCouponCodes_toCloud(std::vector<Coupon> & codes){
     for (int i=0; i<DataUp::CodeStroage.size(); i++) {
         datacode["Code"] = DataUp::CodeStroage[i].code;
         datacode["Des"] = DataUp::CodeStroage[i].des;
+        datacode["IsNew"] = false;
         temp.push_back(datacode);
     }
     
@@ -106,6 +107,7 @@ inline void SaveCouponCodes_toCloud(std::vector<Coupon> & codes){
             
                 datacode["Code"] = codes[i].code;
                 datacode["Des"]  = codes[i].des;
+                datacode["IsNew"] = true;
                 temp.push_back(datacode);
                 
             } catch (std::exception e) {
@@ -159,6 +161,7 @@ inline void UpdateCodeFromJson(){
             Coupon code;
             code.code = j["list"][i]["Code"];
             code.des = j["list"][i]["Des"];
+            code.isNew = j["list"][i]["IsNew"];
             DataUp::CodeStroage.push_back(code);
         }
 
