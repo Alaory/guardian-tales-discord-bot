@@ -53,6 +53,7 @@ public:
 
 
             commands.push_back(sl);
+            commands.push_back(CR);
             bot->global_bulk_command_create(commands);
         }
     });

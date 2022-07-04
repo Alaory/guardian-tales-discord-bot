@@ -5,6 +5,8 @@
 #include <chrono>
 #include <exception>
 #include <iostream>
+#include <memory>
+#include <string>
 #include <thread>
 #include <vector>
 #include <functional>
@@ -34,8 +36,10 @@ public:
     }
 
 
-    static void saveData(std::string toSave,StorageReference & SaveTo){
-        SaveTo.PutBytes(toSave.c_str(),toSave.size()).OnCompletion([](const firebase::Future<firebase::storage::Metadata> & metadata){
+    static void saveData(std::shared_ptr<std::string> &toSave,StorageReference & SaveTo){
+        
+        SaveTo.PutBytes(toSave->c_str(),toSave->size()).OnCompletion([toSave](const firebase::Future<firebase::storage::Metadata> & metadata){
+            std::weak_ptr<std::string> weakme = toSave;
             if(metadata.result()->size_bytes() < 0){
                 std::cout << "FAILED TO SAVE FILE\n";
             }else {
@@ -46,7 +50,7 @@ public:
 
 
 
-    static void Getdata(std::string & SaveTo,StorageReference & Getfrom){
+    static void Getdata(std::string & SaveFrom,StorageReference & Getfrom){
         size_t bufsize = 1024 * 1024 * 1;
         char buf[bufsize];
         Getfrom.GetBytes(buf, bufsize).OnCompletion([&](const  firebase::Future<ulong> fsize){
@@ -54,7 +58,7 @@ public:
                 std::cout << "failed to get data\n";
             }else{
                 std::cout << "Done collecting codes\n";
-                SaveTo = buf;
+                SaveFrom = buf;
             }
         });   
 
@@ -79,7 +83,7 @@ DataUp::savedata function
 inline void SaveCouponCodes_toCloud(std::vector<Coupon> & codes){
     std::cout << "updataing json file\n";
     nlohmann::json jf;
-    std::string fileData_tosave;
+    
     nlohmann::json datacode;
     std::vector<nlohmann::json> temp;
 
@@ -119,8 +123,7 @@ inline void SaveCouponCodes_toCloud(std::vector<Coupon> & codes){
         std::cout << e.what() << '\n';
     }
 
-        
-    fileData_tosave = jf.dump();
+    std::shared_ptr<std::string> fileData_tosave = std::make_shared<std::string>(jf.dump());
     
     DataUp::saveData(fileData_tosave,DataUp::couponfile);
 }
@@ -133,9 +136,9 @@ inline void SaveCouponCodes_toCloud(std::vector<Coupon> & codes){
 downloads the Coupon file from
 the database and pasre it into 
 a coupon vector
-
 */
 inline void UpdateCodeFromJson(){
+    std::cout << "updateing local cache\n";
     std::string CodeJson;
 
     DataUp::Getdata(CodeJson,DataUp::couponfile);
@@ -155,7 +158,7 @@ inline void UpdateCodeFromJson(){
         for(int i=0;i<size;i++){
             Coupon code;
             code.code = j["list"][i]["Code"];
-            code.des = j["list"][i]["Dis"];
+            code.des = j["list"][i]["Des"];
             DataUp::CodeStroage.push_back(code);
         }
 

@@ -14,7 +14,7 @@ int main(){
     
 
     Bosma::Scheduler sch(1);
-    sch.every(std::chrono::seconds(15), [&](){
+    sch.every(std::chrono::hours(6), [&](){
         std::cout << "updateing database\n";
         SaveCouponCodes_toCloud(web.scrap_codes());
         UpdateCodeFromJson();
