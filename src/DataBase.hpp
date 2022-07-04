@@ -16,6 +16,13 @@
 using firebase::storage::Storage;
 using firebase::storage::StorageReference;
 
+/*
+DataUp
+a class that need to be initialized once 
+its responsable to save && download the files from
+the firebase storage
+storagerefrence need to be changed to your specifaction
+*/
 
 class DataUp{
 public:
@@ -63,13 +70,6 @@ public:
         });   
 
     }
-
-
-
-
-    ~DataUp(){
-
-    }
 };
 
 
@@ -80,6 +80,7 @@ turn it into a json file
 then uploads it via the 
 DataUp::savedata function
 */
+
 inline void SaveCouponCodes_toCloud(std::vector<Coupon> & codes){
     std::cout << "updataing json file\n";
     nlohmann::json jf;

@@ -12,6 +12,11 @@ struct Coupon{
     bool isNew = false;
 };
 
+/*
+takes a website , website path and an html tag element
+currentl only for the figure tag.
+NOTE: NEED TO BE CHANGED
+*/
 class website{
     std::string Url,UrlPath,TagName,Page;
     int TagNum;

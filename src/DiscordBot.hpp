@@ -13,6 +13,11 @@
 #include <variant>
 #include <vector>
 
+
+/*
+a simple wrap around dpp::bot
+just to init the commands
+*/
 class DBot{
 public:
     dpp::cluster* bot;
@@ -24,7 +29,7 @@ public:
             dpp::embed em;
             em.set_title("Coupon Codes");
             std::vector<Coupon> code = DataUp::CodeStroage;
-            for(int i=0;i<code.size() ;i++){
+            for(int i=0;i<code.size() && i < 6 ;i++){
                 em.add_field(code[i].code, code[i].des);
             }
             if(code.size() ==0){
@@ -32,7 +37,7 @@ public:
             }else{
                 sl.reply(dpp::message().add_embed(em));
             }
-        }else if (sl.command.get_command_name() == "userid") {
+        }else if (sl.command.get_command_name() == "register") {
             sl.reply(dpp::message(std::get<std::string>(sl.get_parameter("userid"))));
         }
         else {
@@ -46,7 +51,8 @@ public:
             
             dpp::slashcommand sl = dpp::slashcommand("getcodes","Check and get the last Coupon Codes",bot->me.id);
             dpp::slashcommand CR = dpp::slashcommand("register","register your user number to get into the auto redeem code list",bot->me.id)
-            .add_option(dpp::command_option(dpp::command_option_type::co_string,"userid","enter your user id from the game",true));
+            .add_option(dpp::command_option(dpp::command_option_type::co_string,"userid","enter your user id from the game",true))
+            .add_option(dpp::command_option(dpp::command_option_type::co_string,"username","enter your ingame name",true));
             
             std::vector<dpp::slashcommand> commands;
 

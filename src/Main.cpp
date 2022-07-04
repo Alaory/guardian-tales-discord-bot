@@ -14,7 +14,7 @@ int main(){
     
 
     Bosma::Scheduler sch(1);
-    sch.every(std::chrono::seconds(16), [&](){
+    sch.every(std::chrono::hours(6), [&](){
         std::cout << "updateing database\n";
         SaveCouponCodes_toCloud(web.scrap_codes());
         UpdateCodeFromJson();
@@ -29,6 +29,7 @@ int main(){
         }
         if(numcode > 0){
             std::cout << "found " << numcode << " new codes\n";
+            //for testing purpses
             bot.bot->message_create(dpp::message(778219240188149770,em));
         }
         

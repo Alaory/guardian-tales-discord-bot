@@ -7,8 +7,8 @@
 TODO LIST:
 
 - [x] add discord SlashCommands :smirk:
-- [X] add cron function for automatic coupon checker :fearful:
-- [ ] add slashcommand for user id and name
+- [x] add cron function for automatic coupon checker :fearful:
+- [x] add slashcommand for user id and name
 - [ ] add auto Coupon Redeemer  :bowtie:
 - [ ] add arena stuff :satisfied:
 - [ ] fix and clean the repo :flushed:
