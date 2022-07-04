@@ -12,7 +12,7 @@ TODO LIST:
 - [ ] add auto Coupon Redeemer  :bowtie:
 - [ ] add arena stuff :satisfied:
 - [ ] fix and clean the repo :flushed:
-
+- [ ] OPTIONAL add news and best charater :smile:
 
 
 TO BUILD:
