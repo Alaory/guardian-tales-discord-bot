@@ -26,13 +26,13 @@ public:
             {"Content-Type","application/x-www-form-urlencoded; charset=UTF-8"}
         };
         
-        for(int i=0;i<local_RedeemInfo.size();i++){
-            httplib::Params parm;
-            parm.emplace("region",local_RedeemInfo[i].region);
-            parm.emplace("userId",local_RedeemInfo[i].UserId);
-            for (int j=0; j< DataUp::CodeStroage.size()&& j < 1; j++) {
-                parm.emplace("code",(DataUp::CodeStroage[j].code));
-                std::cout << cli.Post("/coupon/redeem",head,parm)->body << '\n';
+        for(int i=0;i<local_RedeemInfo.size();i++){            
+            for (int j=0; j< DataUp::CodeStroage.size()&& j < 6; j++) {
+                httplib::Params parm;
+                parm.emplace("region",local_RedeemInfo[i].region);
+                parm.emplace("userId",local_RedeemInfo[i].UserId);//i know its bad but too lazy to fix it :( 
+                parm.emplace("code",DataUp::CodeStroage[j].code);
+                std::cout << cli.Post("/coupon/redeem",head,parm)->body << '\n' << "container size " << parm.size() << '\n';
             }
         }
 

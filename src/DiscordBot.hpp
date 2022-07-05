@@ -62,6 +62,7 @@ public:
             redeemInfo user = {"6969","user","EU"};
             redeem::local_RedeemInfo.push_back(user);
             redeem::Redeem();
+            sl.reply(dpp::message("yeet"));
         }
 
         else 
