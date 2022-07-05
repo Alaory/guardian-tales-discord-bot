@@ -12,7 +12,7 @@ TODO LIST:
 - [ ] <del> add auto Coupon Redeemer </del> :bowtie: //too slow need to find other way to do it
 - [ ] add arena stuff :satisfied:
 - [ ] fix and clean the repo :flushed:
-- [ ] OPTIONAL add news and best charater :smile:
+- [ ] <strong>OPTIONAL</strong> add news and best charater selector :smile:
 
 
 TO BUILD:
@@ -20,7 +20,7 @@ TO BUILD:
 git clone https://github.com/Alaory/guardian-tales-discord-bot
 cd guardian-tales-discord-bot
 mkdir build && cd build
-cmake .. -DTOKEN="\"your discord bot token\"\"
+cmake .. -DTOKEN=your discord bot token
 ```
 
 also you need a firebase google-services.json file and drop it in the build folder
