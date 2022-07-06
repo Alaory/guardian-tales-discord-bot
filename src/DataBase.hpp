@@ -39,18 +39,18 @@ public:
         data = firebase::storage::Storage::GetInstance(app);
         couponfile = data->GetReferenceFromUrl("gs://discord-app-bot.appspot.com/Coupon.json");
         userfile = data->GetReferenceFromUrl("gs://discord-app-bot.appspot.com/User.json");
-        std::cout << "construction done for database\n";
+        std::cout << "[ DataBase ] construction done for database\n";
     }
 
 
     static void saveData(std::shared_ptr<std::string> &toSave,StorageReference & SaveTo){
-        
+        std::cout << "[ DataBase ] Saving...\n";
         SaveTo.PutBytes(toSave->c_str(),toSave->size()).OnCompletion([toSave](const firebase::Future<firebase::storage::Metadata> & metadata){
             std::weak_ptr<std::string> weakme = toSave;
             if(metadata.result()->size_bytes() < 0){
-                std::cout << "FAILED TO SAVE FILE\n";
+                std::cout << "[ DataBase ] FAILED TO SAVE FILE\n";
             }else {
-                std::cout << "SAVE FILE COMPLETE\n";
+                std::cout << "[ DataBase ] SAVE FILE COMPLETE\n";
             }
         });
     }
@@ -62,9 +62,9 @@ public:
         char buf[bufsize];
         Getfrom.GetBytes(buf, bufsize).OnCompletion([&](const  firebase::Future<ulong> fsize){
             if(*fsize.result() < 0){
-                std::cout << "failed to get data\n";
+                std::cout << "[ DataBase ] failed to get data\n";
             }else{
-                std::cout << "Done collecting codes\n";
+                std::cout << "[ DataBase ] Downloaded file "<< Getfrom.name() << " completed\n";
                 SaveFrom = buf;
             }
         });   
@@ -82,7 +82,7 @@ DataUp::savedata function
 */
 
 inline void SaveCouponCodes_toCloud(std::vector<Coupon> & codes){
-    std::cout << "updataing json file\n";
+    std::cout << "[ DataBase ] updataing json file\n";
     nlohmann::json jf;
     
     nlohmann::json datacode;
@@ -141,7 +141,7 @@ the database and pasre it into
 a coupon vector
 */
 inline void UpdateCodeFromJson(){
-    std::cout << "updateing local cache\n";
+    std::cout << "[ DataBase ] Updateing local cache\n";
     std::string CodeJson;
 
     DataUp::Getdata(CodeJson,DataUp::couponfile);

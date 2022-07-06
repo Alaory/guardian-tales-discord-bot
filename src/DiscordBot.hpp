@@ -25,7 +25,7 @@ public:
     DBot(const std::string token){
     bot = new dpp::cluster(token);
     bot->on_slashcommand([&](const dpp::slashcommand_t & sl){
-        std::cout << "Command named "<<sl.command.get_command_name() << " used by "<<sl.command.usr.username << '\n';
+        std::cout << "[ DiscordBot ] Command named "<<sl.command.get_command_name() << " used by "<<sl.command.usr.username << '\n';
         //TODO USE A switch statement
         if(sl.command.get_command_name() == "getcodes")
         {
@@ -70,12 +70,12 @@ public:
             sl.reply(dpp::message("Command Not Found"));
         }
 
-        std::cout << "guild_id: "<<sl.command.guild_id << '\n';
+        std::cout << "[ DiscordBot ] guild_id: "<<sl.command.guild_id << '\n';
     });
 
     bot->on_ready([&](const dpp::ready_t & event){
         if (dpp::run_once<struct register_bot_commands>()) {
-            std::cout << "Bot Started \n";
+            std::cout << "[ DiscordBot ] Bot Started \n";
             
             dpp::slashcommand sl = dpp::slashcommand("getcodes","Check and get the last Coupon Codes",bot->me.id);
             dpp::slashcommand CR = dpp::slashcommand("register","register your user number to get into the auto redeem code list",bot->me.id)
@@ -107,7 +107,7 @@ public:
 }
 
     void start(){
-    printf("starting bot\n");
+    printf("[ DiscordBot ] starting bot\n");
     bot->start(false);
     }
 
