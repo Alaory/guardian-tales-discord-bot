@@ -21,6 +21,7 @@ git clone https://github.com/Alaory/guardian-tales-discord-bot
 cd guardian-tales-discord-bot
 mkdir build && cd build
 cmake .. -DTOKEN=your discord bot token
+make
 ```
 <strong>IMPORTANT</strong><br>
 you need a firebase google-services.json file. drop it in the build folder
