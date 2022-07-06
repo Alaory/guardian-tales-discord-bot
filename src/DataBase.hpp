@@ -32,6 +32,7 @@ public:
     inline static Storage *data = nullptr;
     inline static StorageReference couponfile;
     inline static StorageReference userfile;
+    inline static StorageReference guildfile;
     inline static std::vector<Coupon> CodeStroage;
 
     DataUp(firebase::App *ap){
@@ -39,6 +40,7 @@ public:
         data = firebase::storage::Storage::GetInstance(app);
         couponfile = data->GetReferenceFromUrl("gs://discord-app-bot.appspot.com/Coupon.json");
         userfile = data->GetReferenceFromUrl("gs://discord-app-bot.appspot.com/User.json");
+        guildfile = data->GetReferenceFromUrl("gs://discord-app-bot.appspot.com/Guild.json");
         std::cout << "[ DataBase ] construction done for database\n";
     }
 

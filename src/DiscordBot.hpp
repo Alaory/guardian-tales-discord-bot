@@ -26,7 +26,9 @@ public:
     bot = new dpp::cluster(token);
     bot->on_slashcommand([&](const dpp::slashcommand_t & sl){
         std::cout << "[ DiscordBot ] Command named "<<sl.command.get_command_name() << " used by "<<sl.command.usr.username << '\n';
+        
         //TODO USE A switch statement
+        
         if(sl.command.get_command_name() == "getcodes")
         {
 
@@ -41,15 +43,18 @@ public:
 
                 em.add_field(code[i].code, code[i].des);
             }
-            if(code.size() ==0){
 
+            if(code.size() ==0){
                 sl.reply(dpp::message("Couldn't find any redeem codes"));
             }else{
-
                 sl.reply(dpp::message().add_embed(em));
             }
 
 
+        }
+
+        else if (sl.command.get_command_name() == "register") {
+            //add update channel for coupon codes
         }
 
 
@@ -71,13 +76,17 @@ public:
         }
 
         std::cout << "[ DiscordBot ] guild_id: "<<sl.command.guild_id << '\n';
+
     });
+
+
 
     bot->on_ready([&](const dpp::ready_t & event){
         if (dpp::run_once<struct register_bot_commands>()) {
             std::cout << "[ DiscordBot ] Bot Started \n";
             
             dpp::slashcommand sl = dpp::slashcommand("getcodes","Check and get the last Coupon Codes",bot->me.id);
+            dpp::slashcommand Upch = dpp::slashcommand("SetUpdate","Set this channel to receive the news coupon codes",bot->me.id);
             dpp::slashcommand CR = dpp::slashcommand("register","register your user number to get into the auto redeem code list",bot->me.id)
             .add_option(dpp::command_option(dpp::command_option_type::co_string,"userid","enter your user id from the game",true))
             .add_option(dpp::command_option(dpp::command_option_type::co_string,"username","enter your ingame name",true));
@@ -87,7 +96,7 @@ public:
 
 
             commands.push_back(sl);
-            commands.push_back(CR);
+            commands.push_back(Upch);
             bot->global_bulk_command_create(commands);
 
 
@@ -97,8 +106,8 @@ public:
 
 
 
-
-            bot->guild_command_create(dpp::slashcommand("redeemme","noting",bot->me.id), 739248968600387595);
+            // for debug stuff
+            //bot->guild_command_create(dpp::slashcommand("redeemme","noting",bot->me.id), 739248968600387595);
         }
     });
 

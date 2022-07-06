@@ -32,11 +32,11 @@ if you dont want to use the firebase stuff tell me and i'll make a branch with o
 
 thanks to:
 
-    - firebase
-    - DPP
-    - httplib
-    - myhtml
-    - nlohmann/json
-    - Scheduler
+    - firebase "Apache License 2.0"
+    - DPP "Apache License 2.0"
+    - httplib "MIT license"
+    - myhtml "LGPL-2.1 license"
+    - nlohmann/json "MIT license"
+    - Bosma/Scheduler "MIT license"
 
 for the librays

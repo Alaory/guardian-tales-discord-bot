@@ -1,0 +1,11 @@
+{
+    "size":0,
+    "guilds":[
+        {
+            "id":0,
+            "name":"template",
+            "coupon_channel_id":0,
+            "coupon_channel_name":"template"
+        }
+    ]
+}
