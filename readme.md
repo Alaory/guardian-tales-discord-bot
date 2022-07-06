@@ -22,10 +22,12 @@ cd guardian-tales-discord-bot
 mkdir build && cd build
 cmake .. -DTOKEN=your discord bot token
 ```
+<strong>IMPORTANT</strong><br>
+you need a firebase google-services.json file. drop it in the build folder
+and change the link from the database.hpp file to your files links and
+<strong>dont forget to add the files to storage on the firebase</strong>
 
-also you need a firebase google-services.json file and drop it in the build folder
-and change the link from the database.hpp file to your links
-dont forget to add the files to storage on the firbase 
+if you dont want to use the firebase stuff tell me and i'll make a branch with out the firebase and replace it with local files
 
 thanks to:
 
