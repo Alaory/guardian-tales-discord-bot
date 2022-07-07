@@ -32,7 +32,6 @@ public:
         if(sl.command.get_command_name() == "getcodes")
         {
 
-
             dpp::embed em;
 
             em.set_title("Coupon Codes");
@@ -53,8 +52,15 @@ public:
 
         }
 
-        else if (sl.command.get_command_name() == "register") {
-            //add update channel for coupon codes
+        else if (sl.command.get_command_name() == "SetUpdate") {
+            sl.reply(dpp::message("this channel will receive the latest cupon codes\n"));
+            Guild gld;
+            gld.channel_id = sl.command.channel_id;
+            gld.guild_id = sl.command.guild_id;
+            gld.Channel_name = "unknown";
+            gld.Guild_Name = "unknown";
+            DataUp::GuildStorage.push_back(gld);
+            SaveGuildData(std::vector<Guild>());
         }
 
 

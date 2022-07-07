@@ -10,6 +10,7 @@ int main(){
     firebase::App *app = firebase::App::Create(firebase::AppOptions());
     DataUp data(app);
     UpdateCodeFromJson();
+    GetGuildData_toLocal();
     DBot bot(TOKEN);
     
 

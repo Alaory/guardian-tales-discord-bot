@@ -1,6 +1,7 @@
 #ifndef database
 #define database
 #include "dpp/nlohmann/json.hpp"
+#include "dpp/snowflake.h"
 #include "scraper.hpp"
 #include <chrono>
 #include <exception>
@@ -24,6 +25,12 @@ the firebase storage
 storagerefrence need to be changed to your specifaction
 */
 
+struct Guild{
+    std::string Guild_Name,Channel_name;
+    dpp::snowflake guild_id,channel_id;
+};
+
+
 class DataUp{
 public:
     DataUp(const DataUp&) = delete;//no copy contructor. bad for me 
@@ -34,7 +41,7 @@ public:
     inline static StorageReference userfile;
     inline static StorageReference guildfile;
     inline static std::vector<Coupon> CodeStroage;
-
+    inline static std::vector<Guild> GuildStorage;
     DataUp(firebase::App *ap){
         app = ap;
         data = firebase::storage::Storage::GetInstance(app);
@@ -44,30 +51,31 @@ public:
         std::cout << "[ DataBase ] construction done for database\n";
     }
 
-
-    static void saveData(std::shared_ptr<std::string> &toSave,StorageReference & SaveTo){
+    static void saveData(std::shared_ptr<std::string> &toSave,StorageReference & SaveTo,std::function<void()> callback = [](){}){
         std::cout << "[ DataBase ] Saving...\n";
-        SaveTo.PutBytes(toSave->c_str(),toSave->size()).OnCompletion([toSave](const firebase::Future<firebase::storage::Metadata> & metadata){
-            std::weak_ptr<std::string> weakme = toSave;
+        SaveTo.PutBytes(toSave->c_str(),toSave->size()).OnCompletion([toSave,callback](const firebase::Future<firebase::storage::Metadata> & metadata){
             if(metadata.result()->size_bytes() < 0){
                 std::cout << "[ DataBase ] FAILED TO SAVE FILE\n";
             }else {
                 std::cout << "[ DataBase ] SAVE FILE COMPLETE\n";
+                callback();
             }
         });
     }
 
 
 
-    static void Getdata(std::string & SaveFrom,StorageReference & Getfrom){
+    static void Getdata(std::string *SaveFrom,StorageReference & Getfrom,std::function<void()> callback = [](){}){
+        std::cout << "[ DataBase ] Downloading\n";
         size_t bufsize = 1024 * 1024 * 1;
         char buf[bufsize];
         Getfrom.GetBytes(buf, bufsize).OnCompletion([&](const  firebase::Future<ulong> fsize){
             if(*fsize.result() < 0){
-                std::cout << "[ DataBase ] failed to get data\n";
+                std::cout << "[ DataBase ] failed to download data\n";
             }else{
-                std::cout << "[ DataBase ] Downloaded file "<< Getfrom.name() << " completed\n";
-                SaveFrom = buf;
+                std::cout << "[ DataBase ] Downloaded file "<< Getfrom.name() << '\n';
+                SaveFrom = new std::string(buf);
+                callback();
             }
         });   
 
@@ -144,7 +152,7 @@ a coupon vector
 */
 inline void UpdateCodeFromJson(){
     std::cout << "[ DataBase ] Updateing local cache\n";
-    std::string CodeJson;
+    std::string * CodeJson = nullptr;
 
     DataUp::Getdata(CodeJson,DataUp::couponfile);
 
@@ -152,12 +160,13 @@ inline void UpdateCodeFromJson(){
     
     for(int i=0;i<3;i++){ 
 
-    if(CodeJson.length() <=0){
+    if(CodeJson == nullptr && CodeJson->length() <=0){
+        std::cout << "[ DataBase ] waiting for data to download\n";
         std::this_thread::sleep_for(std::chrono::seconds(4));//this is bad very bad. i got no other idea of how to solve it.if you do well... TELL ME. i am NOT asking 
     }
 
     try {
-        nlohmann::json j = nlohmann::json::parse(CodeJson);
+        nlohmann::json j = nlohmann::json::parse(*CodeJson);
         int size = j["size"];
         
         for(int i=0;i<size;i++){
@@ -175,6 +184,54 @@ inline void UpdateCodeFromJson(){
         std::cout << e.what() << '\n';
 
     }}
+    delete CodeJson;
 }
+
+inline void SaveGuildData(std::vector<Guild> guilddata){
+    std::cout << "[ DataBase ] Saving GuildData\n";
+    nlohmann::json j;
+    guilddata.insert(guilddata.end(),DataUp::GuildStorage.begin(),DataUp::GuildStorage.end());
+    j["size"] = guilddata.size();
+    std::vector<nlohmann::json> guildjson_list;
+    for(int i=0;i<guilddata.size();i++){
+        nlohmann::json jd;
+        jd["id"] = guilddata[i].guild_id;
+        jd["name"] = guilddata[i].Guild_Name;
+        jd["coupon_channel_id"] = guilddata[i].channel_id;
+        jd["coupon_channel_name"] = guilddata[i].Channel_name;
+        guildjson_list.push_back(jd);
+    }
+    j["guilds"] = guildjson_list;
+    std::shared_ptr<std::string> data = std::make_shared<std::string>(j.dump());
+    DataUp::saveData(data,DataUp::guildfile);//might lose data if we call them together
+}
+
+inline void GetGuildData_toLocal(){
+    std::cout << "[ DataBase ] caching GuildData\n";
+    std::string * GuildJson = nullptr;
+    std::function<void()> callback = [&](){
+        std::cout << "[ DataBase ] CallBack\n";
+        DataUp::GuildStorage.clear();
+        nlohmann::json gjs = nlohmann::json::parse(*GuildJson);
+        try {
+            for(int i=0;i<gjs["guilds"].size();i++){
+                Guild temp;
+                temp.guild_id = gjs["guilds"][i]["id"];
+                temp.Guild_Name = gjs["guilds"][i]["name"];
+                temp.channel_id = gjs["guilds"][i]["coupon_channel_id"];
+                temp.Channel_name = gjs["guilds"][i]["coupon_channel_name"];
+                DataUp::GuildStorage.push_back(temp);
+            }
+        } catch (std::exception e) {
+            std::cout << e.what() << '\n';
+        }
+        delete GuildJson;
+    };
+
+    DataUp::Getdata(GuildJson, DataUp::guildfile);
+}
+
+
+
 
 #endif
