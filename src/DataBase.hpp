@@ -42,6 +42,8 @@ public:
     inline static StorageReference guildfile;
     inline static std::vector<Coupon> CodeStroage;
     inline static std::vector<Guild> GuildStorage;
+    inline static size_t bufsize = 1024 * 1024 * 1;
+    inline static char *buf = new char[bufsize];
     DataUp(firebase::App *ap){
         app = ap;
         data = firebase::storage::Storage::GetInstance(app);
@@ -65,17 +67,19 @@ public:
 
 
 
-    static void Getdata(std::string *SaveFrom,StorageReference & Getfrom,std::function<void()> callback = [](){}){
+    static void Getdata(StorageReference & Getfrom,std::function<void(std::string)> callback){
         std::cout << "[ DataBase ] Downloading\n";
-        size_t bufsize = 1024 * 1024 * 1;
-        char buf[bufsize];
         Getfrom.GetBytes(buf, bufsize).OnCompletion([&](const  firebase::Future<ulong> fsize){
             if(*fsize.result() < 0){
                 std::cout << "[ DataBase ] failed to download data\n";
             }else{
-                std::cout << "[ DataBase ] Downloaded file "<< Getfrom.name() << '\n';
-                SaveFrom = new std::string(buf);
-                callback();
+                try{
+                    std::cout << "[ DataBase ] Downloaded file "<< Getfrom.name() << '\n';
+                    std::string Buffer(buf);
+                    callback(Buffer);
+                }catch (std::exception e){
+                    std::cout << e.what() << '\n';
+                }
             }
         });   
 
@@ -151,24 +155,12 @@ the database and pasre it into
 a coupon vector
 */
 inline void UpdateCodeFromJson(){
-    std::cout << "[ DataBase ] Updateing local cache\n";
-    std::string * CodeJson = nullptr;
-
-    DataUp::Getdata(CodeJson,DataUp::couponfile);
-
-    DataUp::CodeStroage.clear();
-    
-    for(int i=0;i<3;i++){ 
-
-    if(CodeJson == nullptr && CodeJson->length() <=0){
-        std::cout << "[ DataBase ] waiting for data to download\n";
-        std::this_thread::sleep_for(std::chrono::seconds(4));//this is bad very bad. i got no other idea of how to solve it.if you do well... TELL ME. i am NOT asking 
-    }
-
-    try {
-        nlohmann::json j = nlohmann::json::parse(*CodeJson);
+    std::cout << "[ DataBase ] Updateing local cache\n";    
+    std::function<void(std::string)> callback = [](std::string CodeJson){
+        try {
+        DataUp::CodeStroage.clear();
+        nlohmann::json j = nlohmann::json::parse(CodeJson);
         int size = j["size"];
-        
         for(int i=0;i<size;i++){
             Coupon code;
             code.code = j["list"][i]["Code"];
@@ -176,15 +168,11 @@ inline void UpdateCodeFromJson(){
             code.isNew = j["list"][i]["IsNew"];
             DataUp::CodeStroage.push_back(code);
         }
-
-        break;
-
-    }catch(std::exception & e){
-        
-        std::cout << e.what() << '\n';
-
-    }}
-    delete CodeJson;
+        }catch(std::exception & e){
+            std::cout << e.what() << '\n';
+        }
+    };
+    DataUp::Getdata(DataUp::couponfile,callback);
 }
 
 inline void SaveGuildData(std::vector<Guild> guilddata){
@@ -208,11 +196,10 @@ inline void SaveGuildData(std::vector<Guild> guilddata){
 
 inline void GetGuildData_toLocal(){
     std::cout << "[ DataBase ] caching GuildData\n";
-    std::string * GuildJson = nullptr;
-    std::function<void()> callback = [&](){
-        std::cout << "[ DataBase ] CallBack\n";
+    std::function<void(std::string)> callback = [](std::string GuildJson){
+        std::cout << "[ DataBase ] CallBack for GuildData fun\n";
         DataUp::GuildStorage.clear();
-        nlohmann::json gjs = nlohmann::json::parse(*GuildJson);
+        nlohmann::json gjs = nlohmann::json::parse(GuildJson);
         try {
             for(int i=0;i<gjs["guilds"].size();i++){
                 Guild temp;
@@ -225,10 +212,9 @@ inline void GetGuildData_toLocal(){
         } catch (std::exception e) {
             std::cout << e.what() << '\n';
         }
-        delete GuildJson;
     };
 
-    DataUp::Getdata(GuildJson, DataUp::guildfile);
+    DataUp::Getdata(DataUp::guildfile,callback);
 }
 
 
