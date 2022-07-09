@@ -52,15 +52,15 @@ public:
 
         }
 
-        else if (sl.command.get_command_name() == "SetUpdate") {
+        else if (sl.command.get_command_name() == "setupdate") {
             sl.reply(dpp::message("this channel will receive the latest cupon codes\n"));
             Guild gld;
             gld.channel_id = sl.command.channel_id;
             gld.guild_id = sl.command.guild_id;
             gld.Channel_name = "unknown";
             gld.Guild_Name = "unknown";
-            DataUp::GuildStorage.push_back(gld);
-            SaveGuildData(std::vector<Guild>());
+            std::vector<Guild> temp_guild = {gld};
+            SaveGuildData(temp_guild);
         }
 
 

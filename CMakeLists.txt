@@ -16,7 +16,7 @@ link_directories("${CMAKE_SOURCE_DIR}/Dep")
 
 
 
-set(TOKEN )
+
 add_compile_definitions( TOKEN=\"${TOKEN}\")
 
 

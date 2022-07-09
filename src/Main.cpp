@@ -5,6 +5,13 @@
 #include "DiscordBot.hpp"
 #include <Scheduler/Scheduler.h>
 
+
+/*
+TODO 
+
+fix database saving and downloading 
+both for the coupon code and guild data
+*/
 int main(){
     website web("https://ucngame.com","/codes/guardian-tales-coupon-codes/","wp-block-table",MyHTML_TAG_FIGURE);
     firebase::App *app = firebase::App::Create(firebase::AppOptions());
@@ -16,10 +23,11 @@ int main(){
     
 
     Bosma::Scheduler sch(1);
-    sch.every(std::chrono::hours(6), [&](){
+    sch.every(std::chrono::seconds(16), [&](){
         std::cout << "[ Scheduler ] updateing database\n";
         SaveCouponCodes_toCloud(web.scrap_codes());
         UpdateCodeFromJson();
+        GetGuildData_toLocal();
         //temp 778219240188149770
         dpp::embed em = dpp::embed().set_title("new Coupon codes");
         int numcode = 0;
