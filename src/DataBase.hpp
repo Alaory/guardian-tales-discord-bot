@@ -4,6 +4,7 @@
 #include "dpp/snowflake.h"
 #include "scraper.hpp"
 #include <chrono>
+#include <cstring>
 #include <exception>
 #include <iostream>
 #include <memory>
@@ -72,6 +73,7 @@ public:
         std::cout << "[ DataBase ] Downloading\n";
         size_t bufsize = 1024 * 1024 * 1;
         char buf[bufsize];
+        memset(buf, 0, bufsize);
         Getfrom.GetBytes(buf, bufsize).OnCompletion([callback,&buf,&Getfrom](const  firebase::Future<ulong> fsize){
             if(*fsize.result() < 0){
                 std::cout << "[ DataBase ] failed to download data\n";
@@ -80,10 +82,13 @@ public:
                     std::cout << "[ DataBase ] Downloaded file "<< Getfrom.name() << '\n';
                     std::shared_ptr<std::string> Buffer = std::make_shared<std::string>(std::string(buf));
                     callback(Buffer.get());
+                    std::cout << "[ DataBase ] Memeory used for this is from: " << &buf << '\n';
                 }catch (std::exception e){
                     std::cout << e.what() << '\n';
                 }
+
             }
+            
         });   
 
     }
@@ -174,7 +179,7 @@ inline void UpdateCodeFromJson(){
         }catch(std::exception & e){
             std::cout << "[ DataBase ] Code Caching: "<< e.what() << '\n';
         }
-        
+        std::cout << "[ DataBase ] Parsing: " << *CodeJson << '\n';
     };
     DataUp::Getdata(DataUp::couponfile,callback);
 }
@@ -208,8 +213,9 @@ inline void GetGuildData_toLocal(){
     std::function<void(std::string*)> callback = [](std::string* GuildJson){
         //std::cout << "[ DataBase ] what i have for guild : " << *GuildJson << '\n';
         DataUp::GuildStorage.clear();
+        nlohmann::json gjs;
         try {
-            nlohmann::json gjs = nlohmann::json::parse(*GuildJson);
+            gjs = nlohmann::json::parse(*GuildJson);
             for(int i=0;i<gjs["guilds"].size();i++){
                 Guild temp;
                 temp.guild_id = gjs["guilds"][i]["id"];
@@ -220,6 +226,7 @@ inline void GetGuildData_toLocal(){
             }
         } catch (std::exception e) {
             std::cout << "[ DataBase ] Guild Caching: " << e.what() << '\n';
+            
         }
     };
 
