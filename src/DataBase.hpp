@@ -50,21 +50,24 @@ public:
         guildfile = data->GetReferenceFromUrl("gs://discord-app-bot.appspot.com/Guild.json");
         std::cout << "[ DataBase ] construction done for database\n";
     }
-
-    static void saveData(std::shared_ptr<std::string> &toSave,StorageReference & SaveTo,std::function<void()> callback = [](){}){
+    /*
+    Download a file and turn it into a string from firebase
+    */
+    static void saveData(std::shared_ptr<std::string> toSave,StorageReference & SaveTo,std::function<void()> callback = [](){}){
         std::cout << "[ DataBase ] Saving...\n";
-        SaveTo.PutBytes(toSave->c_str(),toSave->size()).OnCompletion([&toSave,callback](const firebase::Future<firebase::storage::Metadata> & metadata){
+        SaveTo.PutBytes(toSave->c_str(),toSave->size()).OnCompletion([toSave,callback](const firebase::Future<firebase::storage::Metadata> & metadata){
             if(metadata.result()->size_bytes() < 0){
                 std::cout << "[ DataBase ] FAILED TO SAVE FILE\n";
             }else {
-                std::cout << "[ DataBase ] SAVE FILE COMPLETE\n";
+                std::cout << "[ DataBase ] SAVE FILE COMPLETE\n"  << '\n';
                 callback();
             }
         });
     }
 
-
-
+    /*
+    Save string to firebase
+    */
     static void Getdata(StorageReference & Getfrom,std::function<void(std::string*)> callback){
         std::cout << "[ DataBase ] Downloading\n";
         size_t bufsize = 1024 * 1024 * 1;
@@ -75,9 +78,8 @@ public:
             }else{
                 try{
                     std::cout << "[ DataBase ] Downloaded file "<< Getfrom.name() << '\n';
-                    std::string *Buffer = new std::string(buf);
-                    callback(Buffer);
-                    delete Buffer;
+                    std::shared_ptr<std::string> Buffer = std::make_shared<std::string>(std::string(buf));
+                    callback(Buffer.get());
                 }catch (std::exception e){
                     std::cout << e.what() << '\n';
                 }
@@ -158,8 +160,6 @@ a coupon vector
 inline void UpdateCodeFromJson(){
     std::cout << "[ DataBase ] Updateing local cache\n";    
     std::function<void(std::string*)> callback = [](std::string* CodeJson){
-        std::cout << "[ DataBase ] callback for Code caching\n";
-        std::cout << "[ DataBase ] what i have for Coupon: " << CodeJson->c_str() << '\n';
         try {
         DataUp::CodeStroage.clear();
         nlohmann::json j = nlohmann::json::parse(*CodeJson);
@@ -178,8 +178,9 @@ inline void UpdateCodeFromJson(){
     };
     DataUp::Getdata(DataUp::couponfile,callback);
 }
-
-
+/*
+turn the guild vector into a json file
+*/
 inline void SaveGuildData(std::vector<Guild> guilddata){
     std::cout << "[ DataBase ] Saving GuildData\n";
     nlohmann::json j;
@@ -205,8 +206,7 @@ download the guild file and parse it into a vector list of Guild :)
 inline void GetGuildData_toLocal(){
     std::cout << "[ DataBase ] caching GuildData\n";
     std::function<void(std::string*)> callback = [](std::string* GuildJson){
-        std::cout << "[ DataBase ] CallBack for GuildData fun\n";
-        std::cout << "[ DataBase ] what i have for guild : " << GuildJson->c_str() << '\n';
+        //std::cout << "[ DataBase ] what i have for guild : " << *GuildJson << '\n';
         DataUp::GuildStorage.clear();
         try {
             nlohmann::json gjs = nlohmann::json::parse(*GuildJson);

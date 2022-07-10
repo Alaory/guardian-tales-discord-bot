@@ -28,19 +28,19 @@ int main(){
         SaveCouponCodes_toCloud(web.scrap_codes());
         UpdateCodeFromJson();
         GetGuildData_toLocal();
-        //temp 778219240188149770
         dpp::embed em = dpp::embed().set_title("new Coupon codes");
         int numcode = 0;
         for(int i=0;i<DataUp::CodeStroage.size();i++){
             if(DataUp::CodeStroage[i].isNew){
                 numcode++;
                 em.add_field(DataUp::CodeStroage[i].code, DataUp::CodeStroage[i].des);
+                DataUp::CodeStroage[i].isNew = false;
             }
         }
         if(numcode > 0){
             std::cout << "[ Scheduler ] found " << numcode << " new codes\n";
-            //for testing purpses
-            bot.bot->message_create(dpp::message(778219240188149770,em));
+            for (int i=0; i< DataUp::GuildStorage.size() ; i++)
+                bot.bot->message_create(dpp::message(DataUp::GuildStorage[i].channel_id,em));
         }
         
     });
