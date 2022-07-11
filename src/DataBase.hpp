@@ -4,6 +4,7 @@
 #include "dpp/snowflake.h"
 #include "scraper.hpp"
 #include <chrono>
+#include <cstddef>
 #include <cstring>
 #include <exception>
 #include <iostream>
@@ -40,7 +41,7 @@ public:
     inline static Storage *data = nullptr;
     inline static StorageReference couponfile;
     inline static StorageReference userfile;
-    inline static StorageReference guildfile;
+    inline static StorageReference guildfile;//need to look on how firebase stores data
     inline static std::vector<Coupon> CodeStroage;
     inline static std::vector<Guild> GuildStorage;
     DataUp(firebase::App *ap){
@@ -69,9 +70,10 @@ public:
     /*
     Save string to firebase
     */
-    static void Getdata(StorageReference & Getfrom,std::function<void(std::string*)> callback){
+    static inline size_t lastsize = 0;
+    static void Getdata(StorageReference  &Getfrom,std::function<void(std::string*)> callback){
         std::cout << "[ DataBase ] Downloading\n";
-        size_t bufsize = 1024 * 1024 * 1;
+        const size_t  bufsize = 1024 * 1024 * 1;
         char buf[bufsize];
         memset(buf, 0, bufsize);
         Getfrom.GetBytes(buf, bufsize).OnCompletion([callback,&buf,&Getfrom](const  firebase::Future<ulong> fsize){
@@ -82,14 +84,13 @@ public:
                     std::cout << "[ DataBase ] Downloaded file "<< Getfrom.name() << '\n';
                     std::shared_ptr<std::string> Buffer = std::make_shared<std::string>(std::string(buf));
                     callback(Buffer.get());
-                    std::cout << "[ DataBase ] Memeory used for this is from: " << &buf << '\n';
                 }catch (std::exception e){
                     std::cout << e.what() << '\n';
                 }
 
             }
             
-        });   
+        });
 
     }
 };
@@ -178,8 +179,9 @@ inline void UpdateCodeFromJson(){
         }
         }catch(std::exception & e){
             std::cout << "[ DataBase ] Code Caching: "<< e.what() << '\n';
+            std::cout << "[ DataBase ] Parsing: " << *CodeJson << '\n';
         }
-        std::cout << "[ DataBase ] Parsing: " << *CodeJson << '\n';
+      
     };
     DataUp::Getdata(DataUp::couponfile,callback);
 }
@@ -226,7 +228,7 @@ inline void GetGuildData_toLocal(){
             }
         } catch (std::exception e) {
             std::cout << "[ DataBase ] Guild Caching: " << e.what() << '\n';
-            
+              std::cout << "[ DataBase ] Parsing: " << *GuildJson << '\n';
         }
     };
 
