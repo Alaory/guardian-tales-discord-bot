@@ -9,8 +9,8 @@ TODO LIST:
 - [x] add discord SlashCommands :smirk:
 - [x] add cron function for automatic coupon checker :fearful:
 - [x] add slashcommand for user id and name
-- [ ] compine sotrage files togther
-- [ ] add auto Coupon Redeemer  :bowtie: //too slow need to find other way to do it
+- [x] compine sotrage files togther
+- [x] add auto Coupon Redeemer  :bowtie: //too slow need to find other way to do it
 - [ ] add arena stuff :satisfied:
 - [ ] fix and clean the repo :flushed:
 - [ ] <strong>OPTIONAL</strong> add news and best charater selector :smile:
