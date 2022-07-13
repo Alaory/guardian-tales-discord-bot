@@ -53,14 +53,26 @@ public:
         }
 
         else if (sl.command.get_command_name() == "setupdate") {
-            sl.reply(dpp::message("this channel will receive the latest cupon codes\n"));
+            sl.reply(dpp::message("this channel will receive the latest Coupon codes\n"));
             Guild gld;
             gld.channel_id = sl.command.channel_id;
             gld.guild_id = sl.command.guild_id;
             gld.Channel_name = "unknown";
             gld.Guild_Name = "unknown";
             std::vector<Guild> temp_guild = {gld};
-            Save_cache_to_cloud(DataUp::CodeStroage,temp_guild);
+            bool found = false;
+            for (int i=0; i<DataUp::GuildStorage.size(); i++) {
+                if(gld.guild_id == DataUp::GuildStorage[i].guild_id){
+                    DataUp::GuildStorage[i].channel_id = gld.channel_id;
+                    found = true;
+                    break;
+                }
+            }
+            if(!found){
+                Save_cache_to_cloud(DataUp::CodeStroage,temp_guild);
+            }else{
+                Save_cache_to_cloud();
+            }
         }
 
 

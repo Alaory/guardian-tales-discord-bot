@@ -22,7 +22,7 @@ int main(){
     
 
     Bosma::Scheduler sch(1);
-    sch.every(std::chrono::seconds(16), [&](){
+    sch.every(std::chrono::hours(6), [&](){
         std::cout << "[ Scheduler ] updateing database\n";
         Save_cache_to_cloud(web.scrap_codes());
         Update_cache_Storage();

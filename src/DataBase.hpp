@@ -100,7 +100,7 @@ then uploads it via the
 DataUp::savedata function
 */
 
-inline void Save_cache_to_cloud(std::vector<Coupon> & codes = DataUp::CodeStroage,std::vector<Guild> guilddata = DataUp::GuildStorage){
+inline void Save_cache_to_cloud(std::vector<Coupon>  codes = {} ,std::vector<Guild> guilddata = {} ){
     std::cout << "[ DataBase ] updataing json file\n";
     nlohmann::json jf;
     
