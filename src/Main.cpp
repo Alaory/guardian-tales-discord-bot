@@ -17,17 +17,15 @@ int main(){
     firebase::App *app = firebase::App::Create(firebase::AppOptions());
     DataUp data(app);
     
-    UpdateCodeFromJson();
-    GetGuildData_toLocal();
+    Update_cache_Storage();
     DBot bot(TOKEN);
     
 
     Bosma::Scheduler sch(1);
     sch.every(std::chrono::seconds(16), [&](){
         std::cout << "[ Scheduler ] updateing database\n";
-        SaveCouponCodes_toCloud(web.scrap_codes());
-        UpdateCodeFromJson();
-        GetGuildData_toLocal();
+        Save_cache_to_cloud(web.scrap_codes());
+        Update_cache_Storage();
         dpp::embed em = dpp::embed().set_title("new Coupon codes");
         int numcode = 0;
         for(int i=0;i<DataUp::CodeStroage.size();i++){

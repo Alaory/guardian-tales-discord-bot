@@ -60,7 +60,7 @@ public:
             gld.Channel_name = "unknown";
             gld.Guild_Name = "unknown";
             std::vector<Guild> temp_guild = {gld};
-            SaveGuildData(temp_guild);
+            Save_cache_to_cloud(DataUp::CodeStroage,temp_guild);
         }
 
 

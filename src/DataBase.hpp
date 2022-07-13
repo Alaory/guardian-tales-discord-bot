@@ -40,16 +40,12 @@ public:
     inline static firebase::App * app = nullptr;
     inline static Storage *data = nullptr;
     inline static StorageReference couponfile;
-    inline static StorageReference userfile;
-    inline static StorageReference guildfile;//need to look on how firebase stores data
     inline static std::vector<Coupon> CodeStroage;
     inline static std::vector<Guild> GuildStorage;
     DataUp(firebase::App *ap){
         app = ap;
         data = firebase::storage::Storage::GetInstance(app);
         couponfile = data->GetReferenceFromUrl("gs://discord-app-bot.appspot.com/Coupon.json");
-        userfile = data->GetReferenceFromUrl("gs://discord-app-bot.appspot.com/User.json");
-        guildfile = data->GetReferenceFromUrl("gs://discord-app-bot.appspot.com/Guild.json");
         std::cout << "[ DataBase ] construction done for database\n";
     }
     /*
@@ -104,7 +100,7 @@ then uploads it via the
 DataUp::savedata function
 */
 
-inline void SaveCouponCodes_toCloud(std::vector<Coupon> & codes){
+inline void Save_cache_to_cloud(std::vector<Coupon> & codes = DataUp::CodeStroage,std::vector<Guild> guilddata = DataUp::GuildStorage){
     std::cout << "[ DataBase ] updataing json file\n";
     nlohmann::json jf;
     
@@ -141,10 +137,27 @@ inline void SaveCouponCodes_toCloud(std::vector<Coupon> & codes){
             
         }
     }
+    /*
+    turn the guild vector into a json file
+    */
+    std::cout << "[ DataBase ] Saving GuildData\n";
+    guilddata.insert(guilddata.end(),DataUp::GuildStorage.begin(),DataUp::GuildStorage.end());
+    std::vector<nlohmann::json> guildjson_list;
+    for(int i=0;i<guilddata.size();i++){
+        nlohmann::json jd;
+        jd["id"] = guilddata[i].guild_id;
+        jd["name"] = guilddata[i].Guild_Name;
+        jd["coupon_channel_id"] = guilddata[i].channel_id;
+        jd["coupon_channel_name"] = guilddata[i].Channel_name;
+        guildjson_list.push_back(jd);
+    }
+    
 
     try{
-        jf["list"] = temp;
-        jf["size"] = codes.size();
+        jf["list_code"] = temp;
+        jf["size_codes"] = codes.size();
+        jf["guilds"] = guildjson_list;
+        jf["size_guild"] = guilddata.size();
     }catch(std::exception e){
         std::cout << e.what() << '\n';
     }
@@ -163,77 +176,50 @@ downloads the Coupon file from
 the database and pasre it into 
 a coupon vector
 */
-inline void UpdateCodeFromJson(){
+inline void Update_cache_Storage(){
     std::cout << "[ DataBase ] Updateing local cache\n";    
     std::function<void(std::string*)> callback = [](std::string* CodeJson){
         try {
         DataUp::CodeStroage.clear();
         nlohmann::json j = nlohmann::json::parse(*CodeJson);
-        int size = j["size"];
+        int size = j["size_codes"];
         for(int i=0;i<size;i++){
             Coupon code;
-            code.code = j["list"][i]["Code"];
-            code.des = j["list"][i]["Des"];
-            code.isNew = j["list"][i]["IsNew"];
+            code.code = j["list_code"][i]["Code"];
+            code.des = j["list_code"][i]["Des"];
+            code.isNew = j["list_code"][i]["IsNew"];
             DataUp::CodeStroage.push_back(code);
         }
         }catch(std::exception & e){
             std::cout << "[ DataBase ] Code Caching: "<< e.what() << '\n';
             std::cout << "[ DataBase ] Parsing: " << *CodeJson << '\n';
         }
-      
-    };
-    DataUp::Getdata(DataUp::couponfile,callback);
-}
-/*
-turn the guild vector into a json file
-*/
-inline void SaveGuildData(std::vector<Guild> guilddata){
-    std::cout << "[ DataBase ] Saving GuildData\n";
-    nlohmann::json j;
-    guilddata.insert(guilddata.end(),DataUp::GuildStorage.begin(),DataUp::GuildStorage.end());
-    j["size"] = guilddata.size();
-    std::vector<nlohmann::json> guildjson_list;
-    for(int i=0;i<guilddata.size();i++){
-        nlohmann::json jd;
-        jd["id"] = guilddata[i].guild_id;
-        jd["name"] = guilddata[i].Guild_Name;
-        jd["coupon_channel_id"] = guilddata[i].channel_id;
-        jd["coupon_channel_name"] = guilddata[i].Channel_name;
-        guildjson_list.push_back(jd);
-    }
-    j["guilds"] = guildjson_list;
-    std::shared_ptr<std::string> data = std::make_shared<std::string>(j.dump());
-    DataUp::saveData(data,DataUp::guildfile);//might lose data if we call them together
-}
 
-/*
-download the guild file and parse it into a vector list of Guild :)
-*/
-inline void GetGuildData_toLocal(){
-    std::cout << "[ DataBase ] caching GuildData\n";
-    std::function<void(std::string*)> callback = [](std::string* GuildJson){
-        //std::cout << "[ DataBase ] what i have for guild : " << *GuildJson << '\n';
+        //update guild here
+        /*
+            download the guild file and parse it into a vector list of Guild :)
+        */
         DataUp::GuildStorage.clear();
-        nlohmann::json gjs;
         try {
-            gjs = nlohmann::json::parse(*GuildJson);
-            for(int i=0;i<gjs["guilds"].size();i++){
+            nlohmann::json j = nlohmann::json::parse(*CodeJson);
+            for(int i=0;i<j["guilds"].size();i++){
                 Guild temp;
-                temp.guild_id = gjs["guilds"][i]["id"];
-                temp.Guild_Name = gjs["guilds"][i]["name"];
-                temp.channel_id = gjs["guilds"][i]["coupon_channel_id"];
-                temp.Channel_name = gjs["guilds"][i]["coupon_channel_name"];
+                temp.guild_id = j["guilds"][i]["id"];
+                temp.Guild_Name = j["guilds"][i]["name"];
+                temp.channel_id = j["guilds"][i]["coupon_channel_id"];
+                temp.Channel_name = j["guilds"][i]["coupon_channel_name"];
                 DataUp::GuildStorage.push_back(temp);
             }
         } catch (std::exception e) {
             std::cout << "[ DataBase ] Guild Caching: " << e.what() << '\n';
-              std::cout << "[ DataBase ] Parsing: " << *GuildJson << '\n';
+            std::cout << "[ DataBase ] Parsing: " << *CodeJson << '\n';
         }
     };
-
-    DataUp::Getdata(DataUp::guildfile,callback);
+    
+    DataUp::Getdata(DataUp::couponfile,callback);
 }
+
+
 
 
 
