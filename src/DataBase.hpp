@@ -19,6 +19,7 @@
 using firebase::storage::Storage;
 using firebase::storage::StorageReference;
 
+
 /*
 DataUp
 a class that need to be initialized once 
@@ -31,7 +32,9 @@ struct Guild{
     std::string Guild_Name,Channel_name;
     dpp::snowflake guild_id,channel_id;
 };
-
+struct redeemInfo{
+    std::string UserId,userName,region="EU";
+};
 
 class DataUp{
 public:
@@ -42,6 +45,7 @@ public:
     inline static StorageReference couponfile;
     inline static std::vector<Coupon> CodeStroage;
     inline static std::vector<Guild> GuildStorage;
+    inline static std::vector<redeemInfo> local_RedeemInfo;
     DataUp(firebase::App *ap){
         app = ap;
         data = firebase::storage::Storage::GetInstance(app);
@@ -66,7 +70,6 @@ public:
     /*
     Save string to firebase
     */
-    static inline size_t lastsize = 0;
     static void Getdata(StorageReference  &Getfrom,std::function<void(std::string*)> callback){
         std::cout << "[ DataBase ] Downloading\n";
         const size_t  bufsize = 1024 * 1024 * 1;
@@ -176,9 +179,10 @@ downloads the Coupon file from
 the database and pasre it into 
 a coupon vector
 */
-inline void Update_cache_Storage(){
+inline void Update_cache_Storage(std::function<void()> _callback = [](){}){
     std::cout << "[ DataBase ] Updateing local cache\n";    
-    std::function<void(std::string*)> callback = [](std::string* CodeJson){
+    std::function<void(std::string*)> callback = [_callback](std::string* CodeJson){
+        std::cout << "[ DataBase ] Parsing...\n";
         try {
         DataUp::CodeStroage.clear();
         nlohmann::json j = nlohmann::json::parse(*CodeJson);
@@ -214,13 +218,16 @@ inline void Update_cache_Storage(){
             std::cout << "[ DataBase ] Guild Caching: " << e.what() << '\n';
             std::cout << "[ DataBase ] Parsing: " << *CodeJson << '\n';
         }
+        _callback();
     };
     
     DataUp::Getdata(DataUp::couponfile,callback);
 }
 
 
-
+/*
+update local cache and update database
+*/
 
 
 
