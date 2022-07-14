@@ -35,7 +35,7 @@ public:
             dpp::embed em;
 
             em.set_title("Coupon Codes");
-
+            em.set_color(dpp::colors::cadmium_green);
             std::vector<Coupon> code = DataUp::CodeStroage;
 
             for(int i=0;i<code.size() && i < 6 ;i++){
@@ -83,7 +83,7 @@ public:
         
         else if (sl.command.get_command_name() == "redeemme") {
             redeemInfo user = {"6969","user","EU"};
-            redeem::local_RedeemInfo.push_back(user);
+            DataUp::local_RedeemInfo.push_back(user);
             redeem::Redeem();
             sl.reply(dpp::message("yeet"));
         }
