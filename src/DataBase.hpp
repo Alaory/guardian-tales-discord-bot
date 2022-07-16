@@ -95,6 +95,12 @@ public:
 };
 
 
+/*
+TODO 
+Seprate all saveing and downloading
+into their function and only modifi one json string
+
+*/
 
 /*
 takes a coupon vector and
@@ -103,7 +109,7 @@ then uploads it via the
 DataUp::savedata function
 */
 
-inline void Save_cache_to_cloud(std::vector<Coupon>  codes = {} ,std::vector<Guild> guilddata = {} ){
+inline void Save_cache_to_cloud(std::vector<Coupon>  codes = {} ,std::vector<Guild> guilddata = {},std::vector<redeemInfo> red = {} ){
     std::cout << "[ DataBase ] updataing json file\n";
     nlohmann::json jf;
     
@@ -156,11 +162,27 @@ inline void Save_cache_to_cloud(std::vector<Coupon>  codes = {} ,std::vector<Gui
     }
     
 
+
+    std::cout << "[ DataBase ] Saving Redeem_Info\n";
+    std::vector<nlohmann::json> redeem_info;
+    red.insert(red.end(),DataUp::local_RedeemInfo.begin(),DataUp::local_RedeemInfo.end());
+    for(int i=0;i<red.size();i++){
+        nlohmann::json jd;
+        jd["UserId"] = red[i].UserId;
+        jd["UserName"] = red[i].userName;
+        jd["Region"] = red[i].region;
+        redeem_info.push_back(jd);
+    }
+
+
+
     try{
         jf["list_code"] = temp;
         jf["size_codes"] = codes.size();
         jf["guilds"] = guildjson_list;
         jf["size_guild"] = guilddata.size();
+        jf["redeem_info_list"] = redeem_info;
+        jf["redeem_info_size"] = redeem_info.size();
     }catch(std::exception e){
         std::cout << e.what() << '\n';
     }
@@ -184,40 +206,61 @@ inline void Update_cache_Storage(std::function<void()> _callback = [](){}){
     std::function<void(std::string*)> callback = [_callback](std::string* CodeJson){
         std::cout << "[ DataBase ] Parsing...\n";
         try {
-        DataUp::CodeStroage.clear();
-        nlohmann::json j = nlohmann::json::parse(*CodeJson);
-        int size = j["size_codes"];
-        for(int i=0;i<size;i++){
-            Coupon code;
-            code.code = j["list_code"][i]["Code"];
-            code.des = j["list_code"][i]["Des"];
-            code.isNew = j["list_code"][i]["IsNew"];
-            DataUp::CodeStroage.push_back(code);
+            nlohmann::json j = nlohmann::json::parse(*CodeJson);
+            
+            try {
+            DataUp::CodeStroage.clear();
+            int size = j["size_codes"];
+            for(int i=0;i<size;i++){
+                Coupon code;
+                code.code = j["list_code"][i]["Code"];
+                code.des = j["list_code"][i]["Des"];
+                code.isNew = j["list_code"][i]["IsNew"];
+                DataUp::CodeStroage.push_back(code);
+            }
+            }catch(std::exception & e){
+                std::cout << "[ DataBase ] Code Caching: "<< e.what() << '\n';
+                std::cout << "[ DataBase ] Parsing: " << *CodeJson << '\n';
+            }
+
+            //update guild here
+            /*
+                download the guild file and parse it into a vector list of Guild :)
+            */
+            DataUp::GuildStorage.clear();
+            try {
+                for(int i=0;i<j["guilds"].size();i++){
+                    Guild temp;
+                    temp.guild_id = j["guilds"][i]["id"];
+                    temp.Guild_Name = j["guilds"][i]["name"];
+                    temp.channel_id = j["guilds"][i]["coupon_channel_id"];
+                    temp.Channel_name = j["guilds"][i]["coupon_channel_name"];
+                    DataUp::GuildStorage.push_back(temp);
+                }
+            } catch (std::exception e) {
+                std::cout << "[ DataBase ] Guild Caching: " << e.what() << '\n';
+                std::cout << "[ DataBase ] Parsing: " << *CodeJson << '\n';
+            }
+
+            DataUp::local_RedeemInfo.clear();
+            try {
+                for(int i=0;i<j["guilds"].size();i++){
+                    redeemInfo temp;
+                    temp.UserId = j["redeem_info_list"][i]["UserId"];
+                    temp.userName = j["redeem_info_list"][i]["UserName"];
+                    temp.region = j["redeem_info_list"][i]["Region"];
+                    DataUp::local_RedeemInfo.push_back(temp);
+                }
+            } catch (std::exception e) {
+                std::cout << "[ DataBase ] Redeem Info Caching: " << e.what() << '\n';
+                std::cout << "[ DataBase ] Parsing: " << *CodeJson << '\n';
+            }
         }
-        }catch(std::exception & e){
-            std::cout << "[ DataBase ] Code Caching: "<< e.what() << '\n';
-            std::cout << "[ DataBase ] Parsing: " << *CodeJson << '\n';
+        catch (std::exception e) {
+            std::cout << e.what() << '\n';
         }
 
-        //update guild here
-        /*
-            download the guild file and parse it into a vector list of Guild :)
-        */
-        DataUp::GuildStorage.clear();
-        try {
-            nlohmann::json j = nlohmann::json::parse(*CodeJson);
-            for(int i=0;i<j["guilds"].size();i++){
-                Guild temp;
-                temp.guild_id = j["guilds"][i]["id"];
-                temp.Guild_Name = j["guilds"][i]["name"];
-                temp.channel_id = j["guilds"][i]["coupon_channel_id"];
-                temp.Channel_name = j["guilds"][i]["coupon_channel_name"];
-                DataUp::GuildStorage.push_back(temp);
-            }
-        } catch (std::exception e) {
-            std::cout << "[ DataBase ] Guild Caching: " << e.what() << '\n';
-            std::cout << "[ DataBase ] Parsing: " << *CodeJson << '\n';
-        }
+
         _callback();
     };
     
