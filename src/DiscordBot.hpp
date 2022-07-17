@@ -78,14 +78,21 @@ public:
 
         else if (sl.command.get_command_name() == "register") 
         {
-            sl.reply(dpp::message(std::get<std::string>(sl.get_parameter("userid"))));
+            redeemInfo user;
+            user.UserId = std::get<std::string>(sl.get_parameter("userid"));
+            user.userName = std::get<std::string>(sl.get_parameter("username"));
+            if(user.UserId.length() != 12){
+                sl.reply(dpp::message("please enter your user id"));
+            }else{
+                DataUp::local_RedeemInfo.push_back(user);
+                sl.reply(dpp::message("done :)"));
+                Save_cache_to_cloud();
+            }
         }
         
         else if (sl.command.get_command_name() == "redeemme") {
-            redeemInfo user = {"6969","user","EU"};
-            DataUp::local_RedeemInfo.push_back(user);
-            redeem::Redeem();
             sl.reply(dpp::message("yeet"));
+            redeem::Redeem();
         }
 
         else 
@@ -115,6 +122,7 @@ public:
 
             commands.push_back(sl);
             commands.push_back(Upch);
+            commands.push_back(CR);
             bot->global_bulk_command_create(commands);
 
 
