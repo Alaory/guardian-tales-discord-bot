@@ -84,8 +84,18 @@ public:
             if(user.UserId.length() != 12){
                 sl.reply(dpp::message("please enter your user id"));
             }else{
-                DataUp::local_RedeemInfo.push_back(user);
-                sl.reply(dpp::message("done :)"));
+                bool found = false;
+                for(int i=0;i<DataUp::local_RedeemInfo.size();i++){
+                    if (DataUp::local_RedeemInfo[i].UserId == user.UserId) {
+                        DataUp::local_RedeemInfo.erase(DataUp::local_RedeemInfo.begin()+i);
+                        sl.reply(dpp::message("You have been removed from the auto redeem list"));
+                        found = true;
+                    }
+                }
+                if(!found){
+                    DataUp::local_RedeemInfo.push_back(user);
+                    sl.reply(dpp::message("done :)"));
+                }
                 Save_cache_to_cloud();
             }
         }
@@ -114,7 +124,7 @@ public:
             dpp::slashcommand Upch = dpp::slashcommand("SetUpdate","Set this channel to receive the news coupon codes",bot->me.id);
             dpp::slashcommand CR = dpp::slashcommand("register","register your user number to get into the auto redeem code list",bot->me.id)
             .add_option(dpp::command_option(dpp::command_option_type::co_string,"userid","enter your user id from the game",true))
-            .add_option(dpp::command_option(dpp::command_option_type::co_string,"username","enter your ingame name",true));
+            .add_option(dpp::command_option(dpp::command_option_type::co_string,"username","enter your ingame name",false));
             
             std::vector<dpp::slashcommand> commands;
 

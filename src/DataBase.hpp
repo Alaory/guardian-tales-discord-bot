@@ -32,8 +32,9 @@ struct Guild{
     std::string Guild_Name,Channel_name;
     dpp::snowflake guild_id,channel_id;
 };
+
 struct redeemInfo{
-    std::string UserId,userName,region="EU";
+    std::string UserId,userName="user",region="EU";
 };
 
 class DataUp{

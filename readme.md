@@ -16,6 +16,7 @@ TODO LIST:
 - [ ] add arena stuff :satisfied:
 - [ ] clean code
 - [ ] <strong>OPTIONAL</strong> add news and best charater selector :smile:
+- [ ] add support for windows
 
 
 TO BUILD:
