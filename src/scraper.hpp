@@ -6,17 +6,37 @@
 #include <string>
 #include <httplib.h>
 #include <myhtml/api.h>
+#include <vector>
 
 struct Coupon{
     std::string code,des;
     bool isNew = false;
 };
-
 /*
-takes a website , website path and an html tag element
-currentl only for the figure tag.
-NOTE: NEED TO BE CHANGED
+add table scraper
+add list scraper
 */
+
+namespace ScrapeTag{
+    inline std::vector<std::string> UL_scraper(myhtml_tree_node_t * ul){
+        myhtml_tree_t * ulTree = myhtml_node_tree(ul);
+        myhtml_tree_node_t * IndexNode = myhtml_node_first(ulTree);
+        myhtml_tree_node_t * TempIndexNode = IndexNode;
+        std::vector<std::string> ul_Text= {};
+        while (IndexNode) {
+            const char * Text = myhtml_node_text(TempIndexNode, nullptr);
+            if(!Text){
+                TempIndexNode = myhtml_node_child(TempIndexNode);
+                continue;
+            }
+            ul_Text.push_back(std::string(Text));
+            IndexNode = myhtml_node_next(IndexNode);
+            TempIndexNode = IndexNode;
+        }
+        return ul_Text;
+    }
+}
+
 class website{
     std::string Url,UrlPath,TagName,Page;
     int TagNum;

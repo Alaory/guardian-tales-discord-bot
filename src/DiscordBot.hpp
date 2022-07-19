@@ -94,7 +94,7 @@ public:
                 }
                 if(!found){
                     DataUp::local_RedeemInfo.push_back(user);
-                    sl.reply(dpp::message("done :)"));
+                    sl.reply(dpp::message("you have entered :)"));
                 }
                 Save_cache_to_cloud();
             }
