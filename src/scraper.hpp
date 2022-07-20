@@ -3,6 +3,7 @@
 #include "dpp/utility.h"
 #include <dpp/nlohmann/json.hpp>
 #include <chrono>
+#include <memory>
 #include <string>
 #include <httplib.h>
 #include <myhtml/api.h>
@@ -12,17 +13,27 @@ struct Coupon{
     std::string code,des;
     bool isNew = false;
 };
+
 /*
 add table scraper
 add list scraper
 */
 
 namespace ScrapeTag{
-    inline std::vector<std::string> UL_scraper(myhtml_tree_node_t * ul){
-        myhtml_tree_t * ulTree = myhtml_node_tree(ul);
-        myhtml_tree_node_t * IndexNode = myhtml_node_first(ulTree);
+    /*
+        @breif parse a ul tag into a vector string list
+    */
+    typedef std::vector<std::string> UL;
+    typedef std::vector<UL> TABLE;
+
+
+
+
+
+    inline UL UL_scraper(myhtml_tree_node_t * ul){
+        myhtml_tree_node_t * IndexNode = myhtml_node_child(ul);
         myhtml_tree_node_t * TempIndexNode = IndexNode;
-        std::vector<std::string> ul_Text= {};
+        UL ul_Text = {};
         while (IndexNode) {
             const char * Text = myhtml_node_text(TempIndexNode, nullptr);
             if(!Text){
@@ -30,27 +41,96 @@ namespace ScrapeTag{
                 continue;
             }
             ul_Text.push_back(std::string(Text));
+            std::cout << "[ Scraper::UL_scraper ] I got: " << Text << '\n';
             IndexNode = myhtml_node_next(IndexNode);
+            if(!IndexNode)
+                break;
             TempIndexNode = IndexNode;
         }
         return ul_Text;
     }
+
+
+
+
+
+
+
+
+    /*
+    Parse a table tag from html into a vector list
+    */
+    inline TABLE Table_scraper(myhtml_tree_node_t * table){
+        
+        if(myhtml_node_tag_id(table) != MyHTML_TAG_TABLE){
+            std::cout << "[ Scraper::Table_scraper ] We Got: " << myhtml_node_tag_id(table) << " we need: " << MyHTML_TAG_TABLE << '\n';
+            return {};
+        }
+
+        myhtml_tree_node_t * IndexNode_P = myhtml_node_child(table);
+        myhtml_tree_node_t * IndexNode_C = myhtml_node_child(IndexNode_P);
+        myhtml_tree_node_t * IndexNode_T = IndexNode_C;
+        TABLE ul_Text = {};
+        while (IndexNode_P) {
+            std::vector<std::string> Row;
+            while (IndexNode_C) {
+                const char * Text = myhtml_node_text(IndexNode_T, nullptr);
+                if(!Text){
+                    IndexNode_C = myhtml_node_next(IndexNode_C);
+                    continue;
+                }
+                if(strlen(Text) > 0){
+                    Row.push_back(std::string(Text));
+                    std::cout << "[ Scraper::Table_scraper ] I got: " << Text << '\n';
+                }
+
+                IndexNode_C = myhtml_node_next(IndexNode_C);
+                if(!IndexNode_C)
+                    continue;
+                IndexNode_T = IndexNode_C;
+            }
+            IndexNode_P = myhtml_node_next(IndexNode_P);
+            if(!IndexNode_P)
+                break;
+            IndexNode_C = myhtml_node_child(IndexNode_P);
+            IndexNode_T = IndexNode_C;
+            IndexNode_T = myhtml_node_child(IndexNode_T);
+            continue;
+        }
+    return ul_Text;
+    }
+
+
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 class website{
     std::string Url,UrlPath,TagName,Page;
-    int TagNum;
+    int TagId;
     myhtml_t *context;
     myhtml_tree_t * treeBody;
     std::vector<Coupon> Codes;
     httplib::Client * cli;
     public:
-    website(const std::string &url,const std::string &WebPath,const std::string TagName,const int TagNum){
+    website(const std::string &url,const std::string &WebPath,const std::string TagName,const int TagId){
         
         this->Url = url;
         this->UrlPath = WebPath;
         this->TagName = TagName;
-        this->TagNum = TagNum;
+        this->TagId = TagId;
         //init myhtml 
         context = myhtml_create(); 
         myhtml_init(context, MyHTML_OPTIONS_DEFAULT, 1, 0);
@@ -68,20 +148,25 @@ class website{
     // add auto recive codes
 
     std::vector<Coupon>& scrap_codes(){
+        std::cout << "[ scraper ] Scarping  Codes\n";
         Codes.clear();
         myhtml_tree_clean(treeBody);
         Page = cli->Get(UrlPath.c_str())->body;
         myhtml_parse(treeBody, MyENCODING_UTF_8, Page.c_str() , Page.size());
-        myhtml_collection_t * TagColl = myhtml_get_nodes_by_tag_id(treeBody, nullptr, TagNum, nullptr);
+        myhtml_collection_t * TagColl = myhtml_get_nodes_by_tag_id(treeBody, nullptr, TagId, nullptr);
         
         for (int i=0; i < TagColl->length; i++) {
             
-            std::string tname(myhtml_attribute_value(myhtml_node_attribute_first(TagColl->list[i]), nullptr));
-            if(tname == TagName){
+            std::string IDname(myhtml_attribute_value(myhtml_node_attribute_first(TagColl->list[i]), nullptr));
+            if(IDname == TagName){
                 
-                if (TagNum == MyHTML_TAG_FIGURE) {
+                if (TagId == MyHTML_TAG_FIGURE) {
                     //access html tags
                     myhtml_tree_t * tree_figure = myhtml_node_tree(TagColl->list[i]);
+                    ScrapeTag::TABLE table = ScrapeTag::Table_scraper(myhtml_node_child(TagColl->list[i]));
+                    for (int i=0; i<table.size(); i++) {
+                        std::cout << "[ Scraper ] Table: " << i << " first element: " << table[i][0] << '\n';
+                    }
                     myhtml_collection_t * TagTr = myhtml_get_nodes_by_tag_id(tree_figure, nullptr, MyHTML_TAG_TR, nullptr);
 
                     for(int j=0;j<TagTr->length;j++){
