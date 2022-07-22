@@ -1,5 +1,9 @@
+#ifndef LOG
+#define LOG(STR)  std::cout << STR
+#endif
 #ifndef scraper
 #define scraper
+
 #include "dpp/utility.h"
 #include <dpp/nlohmann/json.hpp>
 #include <chrono>
@@ -61,43 +65,68 @@ namespace ScrapeTag{
     Parse a table tag from html into a vector list
     */
     inline TABLE Table_scraper(myhtml_tree_node_t * table){
-        
+        LOG("[ Scraper::Table_scraper ] Tag numbered: " << myhtml_node_tag_id(table) << '\n');
         if(myhtml_node_tag_id(table) != MyHTML_TAG_TABLE){
-            std::cout << "[ Scraper::Table_scraper ] We Got: " << myhtml_node_tag_id(table) << " we need: " << MyHTML_TAG_TABLE << '\n';
+            std::cout << "[ Scraper::Table_scraper ] We Got: " << myhtml_node_tag_id(table) << " we need table: " << MyHTML_TAG_TABLE << '\n';
             return {};
         }
 
         myhtml_tree_node_t * IndexNode_P = myhtml_node_child(table);
         myhtml_tree_node_t * IndexNode_C = myhtml_node_child(IndexNode_P);
         myhtml_tree_node_t * IndexNode_T = IndexNode_C;
-        TABLE ul_Text = {};
+        
+
+        TABLE Table;
+        
         while (IndexNode_P) {
             std::vector<std::string> Row;
-            while (IndexNode_C) {
-                const char * Text = myhtml_node_text(IndexNode_T, nullptr);
+            while (IndexNode_C){
+                LOG("[ Scraper::Table_scraper ] Parent:" <<
+                    myhtml_node_tag_id(IndexNode_P) <<
+                    " Child: " << myhtml_node_tag_id(IndexNode_C) <<
+                    " Temp: " << myhtml_node_tag_id(IndexNode_T) << '\n');
+                
+
+                const char * Text = myhtml_node_text(IndexNode_C, nullptr);
+
                 if(!Text){
-                    IndexNode_C = myhtml_node_next(IndexNode_C);
+                    IndexNode_C = myhtml_node_child(IndexNode_C);
                     continue;
                 }
+                
                 if(strlen(Text) > 0){
                     Row.push_back(std::string(Text));
-                    std::cout << "[ Scraper::Table_scraper ] I got: " << Text << '\n';
+                    LOG("[ Scraper::Table_scraper ] I got: " << Row[Row.size()-1] << '\n');
                 }
 
-                IndexNode_C = myhtml_node_next(IndexNode_C);
-                if(!IndexNode_C)
+
+                if (myhtml_node_next(IndexNode_C))
+                    IndexNode_C = myhtml_node_next(IndexNode_C);
+                else if(myhtml_node_parent(IndexNode_C)!= IndexNode_P){
+                    LOG("[ Scraper::Table_scraper ] Next Sibling: " << myhtml_node_tag_id(IndexNode_C) << '\n');
+                    IndexNode_C = myhtml_node_next(myhtml_node_parent(IndexNode_C));
                     continue;
-                IndexNode_T = IndexNode_C;
+                }
+                
             }
+
+            
+            Table.push_back(Row);
+            //LOG("[ Scraper::Table_scraper ] Row Pushed\n");
+            
+                
+
             IndexNode_P = myhtml_node_next(IndexNode_P);
+            
             if(!IndexNode_P)
-                break;
+                continue;
             IndexNode_C = myhtml_node_child(IndexNode_P);
             IndexNode_T = IndexNode_C;
-            IndexNode_T = myhtml_node_child(IndexNode_T);
-            continue;
+            
         }
-    return ul_Text;
+    
+    LOG("[ Scraper::Table_scraper ] List Size:"<<Table.size()<< " and :" << Table[0].size() <<'\n');
+    return Table;
     }
 
 
@@ -163,10 +192,12 @@ class website{
                 if (TagId == MyHTML_TAG_FIGURE) {
                     //access html tags
                     myhtml_tree_t * tree_figure = myhtml_node_tree(TagColl->list[i]);
-                    ScrapeTag::TABLE table = ScrapeTag::Table_scraper(myhtml_node_child(TagColl->list[i]));
-                    for (int i=0; i<table.size(); i++) {
-                        std::cout << "[ Scraper ] Table: " << i << " first element: " << table[i][0] << '\n';
-                    }
+
+                    // ScrapeTag::TABLE table = ScrapeTag::Table_scraper(myhtml_node_child(TagColl->list[i]));
+                    // for (int i=0; i<table.size(); i++) {
+                    //     std::cout << "[ Scraper ] Table: " << i << " first element: " << table[i][0] << '\n';
+                    // }
+
                     myhtml_collection_t * TagTr = myhtml_get_nodes_by_tag_id(tree_figure, nullptr, MyHTML_TAG_TR, nullptr);
 
                     for(int j=0;j<TagTr->length;j++){

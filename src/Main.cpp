@@ -1,3 +1,6 @@
+#ifndef LOG
+#define LOG(STR)  std::cout << STR
+#endif
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "scraper.hpp"
 #include "DataBase.hpp"
