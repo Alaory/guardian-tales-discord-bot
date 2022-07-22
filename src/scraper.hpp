@@ -80,11 +80,19 @@ namespace ScrapeTag{
         
         while (IndexNode_P) {
             std::vector<std::string> Row;
+            myhtml_tag_id_t Parent_Tag = myhtml_node_tag_id(IndexNode_P);
+            if(Parent_Tag == MyHTML_TAG_THEAD || Parent_Tag == MyHTML_TAG_TBODY){
+                IndexNode_P = myhtml_node_child(IndexNode_P);
+                IndexNode_C = myhtml_node_child(IndexNode_P);
+                LOG("[ Scraper::Table_scraper ] parents is moving down: " << myhtml_node_tag_id(IndexNode_P) << '\n');
+            }
+
+
             while (IndexNode_C){
-                LOG("[ Scraper::Table_scraper ] Parent:" <<
-                    myhtml_node_tag_id(IndexNode_P) <<
-                    " Child: " << myhtml_node_tag_id(IndexNode_C) <<
-                    " Temp: " << myhtml_node_tag_id(IndexNode_T) << '\n');
+                // LOG("[ Scraper::Table_scraper ] Parent:" <<
+                //     myhtml_node_tag_id(IndexNode_P) <<
+                //     " Child: " << myhtml_node_tag_id(IndexNode_C) <<
+                //     " Temp: " << myhtml_node_tag_id(IndexNode_T) << '\n');
                 
 
                 const char * Text = myhtml_node_text(IndexNode_C, nullptr);
@@ -96,36 +104,64 @@ namespace ScrapeTag{
                 
                 if(strlen(Text) > 0){
                     Row.push_back(std::string(Text));
-                    LOG("[ Scraper::Table_scraper ] I got: " << Row[Row.size()-1] << '\n');
+                    LOG("[ Scraper::Table_scraper ] I got: " << Text<< '\n');
                 }
 
 
-                if (myhtml_node_next(IndexNode_C))
+                if (myhtml_node_next(IndexNode_C)){
                     IndexNode_C = myhtml_node_next(IndexNode_C);
-                else if(myhtml_node_parent(IndexNode_C)!= IndexNode_P){
                     LOG("[ Scraper::Table_scraper ] Next Sibling: " << myhtml_node_tag_id(IndexNode_C) << '\n');
-                    IndexNode_C = myhtml_node_next(myhtml_node_parent(IndexNode_C));
+                }
+                else if(myhtml_node_parent(IndexNode_C)!= IndexNode_P){
+                    LOG("[ Scraper::Table_scraper ] Moving parents from Node: " << myhtml_node_tag_id(IndexNode_C) << '\n');
+                    IndexNode_C = myhtml_node_parent(IndexNode_C);
+                    while (IndexNode_C) {
+                        if(myhtml_node_next(IndexNode_C)){
+                            LOG("[ Scraper::Table_scraper ] Moving to new sibling \n");
+                            IndexNode_C = myhtml_node_next(IndexNode_C);
+                            break;
+                        }else if (myhtml_node_parent(IndexNode_C) != IndexNode_P) {
+                            LOG("[ Scraper::Table_scraper ] Moving to new parents \n");
+                            IndexNode_C = myhtml_node_parent(IndexNode_C);
+                            continue;
+                        }else{
+                            LOG("[ Scraper::Table_scraper ] Node doesnt have sibling \n");
+                            IndexNode_C = nullptr;
+                            break;
+                        }
+                    }
                     continue;
                 }
-                
+                IndexNode_C = nullptr;
             }
 
-            
-            Table.push_back(Row);
-            //LOG("[ Scraper::Table_scraper ] Row Pushed\n");
-            
-                
+            if(Row.size() > 0)
+                Table.push_back(Row);
 
-            IndexNode_P = myhtml_node_next(IndexNode_P);
             
-            if(!IndexNode_P)
-                continue;
-            IndexNode_C = myhtml_node_child(IndexNode_P);
-            IndexNode_T = IndexNode_C;
             
+            
+
+            
+            if(myhtml_node_next(IndexNode_P)){
+               // LOG("[ Scraper::Table_scraper ] Parent Node is Going sibling\n");
+                IndexNode_P = myhtml_node_next(IndexNode_P);
+            }else{
+                LOG("[ Scraper::Table_scraper ] parents is moving Up: " << myhtml_node_tag_id(IndexNode_P) << '\n');
+                IndexNode_P = myhtml_node_parent(IndexNode_P);
+                if(myhtml_node_tag_id(IndexNode_P) == MyHTML_TAG_TABLE){
+                    LOG("[ Scraper::Table_scraper ] parents is Table tag");
+                    IndexNode_P = nullptr;
+                    continue;
+                }
+                IndexNode_P = myhtml_node_next(IndexNode_P);
+            }
+
+
+
         }
     
-    LOG("[ Scraper::Table_scraper ] List Size:"<<Table.size()<< " and :" << Table[0].size() <<'\n');
+    LOG("[ Scraper::Table_scraper ] last Code: "<<Table[Table.size()-1][0] << '\n');
     return Table;
     }
 
@@ -193,10 +229,12 @@ class website{
                     //access html tags
                     myhtml_tree_t * tree_figure = myhtml_node_tree(TagColl->list[i]);
 
-                    // ScrapeTag::TABLE table = ScrapeTag::Table_scraper(myhtml_node_child(TagColl->list[i]));
-                    // for (int i=0; i<table.size(); i++) {
-                    //     std::cout << "[ Scraper ] Table: " << i << " first element: " << table[i][0] << '\n';
-                    // }
+
+
+                    ScrapeTag::TABLE table = ScrapeTag::Table_scraper(myhtml_node_child(TagColl->list[i]));
+                    
+
+                    
 
                     myhtml_collection_t * TagTr = myhtml_get_nodes_by_tag_id(tree_figure, nullptr, MyHTML_TAG_TR, nullptr);
 
