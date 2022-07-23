@@ -9,14 +9,14 @@
 ## Commands
 /getcodes
 ![plot](./res/CouponCodes.png)
-will send the last 6 codes. the number can be changed
+will send the last 6 coupon codes from database. the number can be changed
 
 </br>
 /setupdate
 
 ![plot](./res/NewCodes.png)
 
-whenever the the scaper finds a new coupon code it will send it to this channel
+whenever the the scraper finds a new coupon code it will send it to this channel
 
 </br>
 /register
