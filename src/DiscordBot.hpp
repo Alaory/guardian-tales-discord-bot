@@ -36,7 +36,7 @@ public:
 
             em.set_title("Coupon Codes");
             em.set_color(dpp::colors::cadmium_green);
-            std::vector<Coupon> code = DataUp::CodeStroage;
+            std::vector<Coupon> &code = DataUp::CodeStroage;
 
             for(int i=0;i<code.size() && i < 6 ;i++){
 
@@ -44,6 +44,7 @@ public:
             }
 
             if(code.size() ==0){
+                Update_cache_Storage();
                 sl.reply(dpp::message("Couldn't find any redeem codes"));
             }else{
                 sl.reply(dpp::message().add_embed(em));

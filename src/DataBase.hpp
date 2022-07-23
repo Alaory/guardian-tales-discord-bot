@@ -3,14 +3,7 @@
 #include "dpp/nlohmann/json.hpp"
 #include "dpp/snowflake.h"
 #include "scraper.hpp"
-#include <chrono>
-#include <cstddef>
-#include <cstring>
-#include <exception>
 #include <iostream>
-#include <memory>
-#include <string>
-#include <thread>
 #include <vector>
 #include <functional>
 #include <firebase/app.h>
@@ -153,6 +146,7 @@ inline void Save_cache_to_cloud(std::vector<Coupon>  codes = {} ,std::vector<Gui
     std::cout << "[ DataBase ] Saving GuildData\n";
     guilddata.insert(guilddata.end(),DataUp::GuildStorage.begin(),DataUp::GuildStorage.end());
     std::vector<nlohmann::json> guildjson_list;
+    
     for(int i=0;i<guilddata.size();i++){
         nlohmann::json jd;
         jd["id"] = guilddata[i].guild_id;
@@ -209,6 +203,7 @@ inline void Update_cache_Storage(std::function<void()> _callback = [](){}){
         try {
             nlohmann::json j = nlohmann::json::parse(*CodeJson);
             
+
             try {
             DataUp::CodeStroage.clear();
             int size = j["size_codes"];
@@ -224,10 +219,7 @@ inline void Update_cache_Storage(std::function<void()> _callback = [](){}){
                 std::cout << "[ DataBase ] Parsing: " << *CodeJson << '\n';
             }
 
-            //update guild here
-            /*
-                download the guild file and parse it into a vector list of Guild :)
-            */
+
             DataUp::GuildStorage.clear();
             try {
                 for(int i=0;i<j["guilds"].size();i++){
@@ -243,9 +235,11 @@ inline void Update_cache_Storage(std::function<void()> _callback = [](){}){
                 std::cout << "[ DataBase ] Parsing: " << *CodeJson << '\n';
             }
 
+
+
             DataUp::local_RedeemInfo.clear();
             try {
-                for(int i=0;i<j["guilds"].size();i++){
+                for(int i=0;i<j["redeem_info_list"].size();i++){
                     redeemInfo temp;
                     temp.UserId = j["redeem_info_list"][i]["UserId"];
                     temp.userName = j["redeem_info_list"][i]["UserName"];
@@ -256,11 +250,11 @@ inline void Update_cache_Storage(std::function<void()> _callback = [](){}){
                 std::cout << "[ DataBase ] Redeem Info Caching: " << e.what() << '\n';
                 std::cout << "[ DataBase ] Parsing: " << *CodeJson << '\n';
             }
+
         }
         catch (std::exception e) {
             std::cout << e.what() << '\n';
         }
-
 
         _callback();
     };

@@ -1,6 +1,10 @@
+#include <exception>
 #ifndef LOG
 #define LOG(STR)  std::cout << STR
 #endif
+
+
+
 #ifndef scraper
 #define scraper
 
@@ -64,11 +68,11 @@ namespace ScrapeTag{
     /*
     Parse a table tag from html into a vector list
     */
-    inline TABLE Table_scraper(myhtml_tree_node_t * table){
+    inline void Table_scraper(myhtml_tree_node_t * table,TABLE & Table){
         LOG("[ Scraper::Table_scraper ] Tag numbered: " << myhtml_node_tag_id(table) << '\n');
         if(myhtml_node_tag_id(table) != MyHTML_TAG_TABLE){
             std::cout << "[ Scraper::Table_scraper ] We Got: " << myhtml_node_tag_id(table) << " we need table: " << MyHTML_TAG_TABLE << '\n';
-            return {};
+            return;
         }
 
         myhtml_tree_node_t * IndexNode_P = myhtml_node_child(table);
@@ -76,29 +80,29 @@ namespace ScrapeTag{
         myhtml_tree_node_t * IndexNode_T = IndexNode_C;
         
 
-        TABLE Table;
+        
         
         while (IndexNode_P) {
             std::vector<std::string> Row;
             myhtml_tag_id_t Parent_Tag = myhtml_node_tag_id(IndexNode_P);
             if(Parent_Tag == MyHTML_TAG_THEAD || Parent_Tag == MyHTML_TAG_TBODY){
                 IndexNode_P = myhtml_node_child(IndexNode_P);
-                IndexNode_C = myhtml_node_child(IndexNode_P);
                 LOG("[ Scraper::Table_scraper ] parents is moving down: " << myhtml_node_tag_id(IndexNode_P) << '\n');
             }
-
+            IndexNode_C = myhtml_node_child(IndexNode_P);
 
             while (IndexNode_C){
-                // LOG("[ Scraper::Table_scraper ] Parent:" <<
-                //     myhtml_node_tag_id(IndexNode_P) <<
-                //     " Child: " << myhtml_node_tag_id(IndexNode_C) <<
-                //     " Temp: " << myhtml_node_tag_id(IndexNode_T) << '\n');
                 
 
                 const char * Text = myhtml_node_text(IndexNode_C, nullptr);
 
                 if(!Text){
-                    IndexNode_C = myhtml_node_child(IndexNode_C);
+                    if(myhtml_node_tag_id(IndexNode_C) == MyHTML_TAG_META){
+                        IndexNode_C = myhtml_node_next(IndexNode_C);
+                    }else {
+                        IndexNode_C = myhtml_node_child(IndexNode_C);
+                    }
+                    
                     continue;
                 }
                 
@@ -138,11 +142,7 @@ namespace ScrapeTag{
             if(Row.size() > 0)
                 Table.push_back(Row);
 
-            
-            
-            
 
-            
             if(myhtml_node_next(IndexNode_P)){
                // LOG("[ Scraper::Table_scraper ] Parent Node is Going sibling\n");
                 IndexNode_P = myhtml_node_next(IndexNode_P);
@@ -161,8 +161,7 @@ namespace ScrapeTag{
 
         }
     
-    LOG("[ Scraper::Table_scraper ] last Code: "<<Table[Table.size()-1][0] << '\n');
-    return Table;
+    LOG("[ Scraper::Table_scraper ] last Code: "<<Table[Table.size()-1][0]  << " info: " <<Table[Table.size()-1][1] << '\n');
     }
 
 
@@ -206,12 +205,6 @@ class website{
         cli = new httplib::Client(url);
     }
 
-
-    // TODO 
-    // make function to search for the data INSTED of looking specificly for it 
-    // optional 
-    // add auto recive codes
-
     std::vector<Coupon>& scrap_codes(){
         std::cout << "[ scraper ] Scarping  Codes\n";
         Codes.clear();
@@ -226,43 +219,19 @@ class website{
             if(IDname == TagName){
                 
                 if (TagId == MyHTML_TAG_FIGURE) {
-                    //access html tags
                     myhtml_tree_t * tree_figure = myhtml_node_tree(TagColl->list[i]);
-
-
-
-                    ScrapeTag::TABLE table = ScrapeTag::Table_scraper(myhtml_node_child(TagColl->list[i]));
+                    ScrapeTag::TABLE table;
+                    ScrapeTag::Table_scraper(myhtml_node_child(TagColl->list[i]),table);
                     
-
-                    
-
-                    myhtml_collection_t * TagTr = myhtml_get_nodes_by_tag_id(tree_figure, nullptr, MyHTML_TAG_TR, nullptr);
-
-                    for(int j=0;j<TagTr->length;j++){
-
-
-                        myhtml_tree_node_t * node = TagTr->list[j];
-                        const char * code = nullptr;
-
-                        while (true) {
-                            code = myhtml_node_text(node,nullptr);
-                            if(code == nullptr){
-                                node = myhtml_node_child(node);
-                                continue;
-                            }
-                            break;
+                    for(int i=1;i<table.size();i++){
+                        try {
+                            Coupon Code{table[i][0],table[i][1]};
+                            Codes.push_back(Code);
+                            LOG("[ scraper ] Pushed: " << Code.code << ',' << Code.des << '\n');
+                        }catch(std::exception &e){
+                            std::cout << "[ scraper ] "<< e.what() << '\n';
                         }
-
-                        Coupon Code;
-                        Code.code = code;
-                        if(Code.code.find(' ') != std::string::npos){
-                            continue;
-                        }
-                        Code.des = dpp::utility::current_date_time();
-                        Codes.push_back(Code);
                     }
-
-                    myhtml_collection_destroy(TagTr);
                     break;
                 }
             }

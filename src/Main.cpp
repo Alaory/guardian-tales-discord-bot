@@ -1,3 +1,4 @@
+#define LOG(STR)
 #ifndef LOG
 #define LOG(STR)  std::cout << STR
 #endif
@@ -12,9 +13,8 @@ int main(){
     website web("https://ucngame.com","/codes/guardian-tales-coupon-codes/","wp-block-table",MyHTML_TAG_FIGURE);
     firebase::App *app = firebase::App::Create(firebase::AppOptions());
     DataUp data(app);
-    Update_cache_Storage([&web](){
-        Save_cache_to_cloud(web.scrap_codes());
-    });
+    Save_cache_to_cloud(web.scrap_codes());
+    Update_cache_Storage();
     
     DBot bot(TOKEN);
     Bosma::Scheduler sch(1);

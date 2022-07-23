@@ -11,10 +11,10 @@ TODO LIST:
 - [x] add slashcommand for user id and name
 - [x] compine sotrage files togther
 - [x] add auto Coupon Redeemer  :bowtie: //too slow need to find other way to do it
-- [ ] fix the Web Scraper 
+- [x] fix the Web Scraper 
 - [ ] fix and clean the repo :flushed: //on hold
 - [ ] add arena stuff :satisfied:
-- [ ] clean code
+- [ ] setup redeem code
 - [ ] <strong>OPTIONAL</strong> add news and best charater selector :smile:
 - [ ] add support for windows
 
