@@ -4,6 +4,35 @@
 
 [![Follow me](https://img.shields.io/github/followers/Alaory?style=for-the-badge)](https://github.com/Alaory)
 
+
+
+## Commands
+/getcodes
+![plot](./res/CouponCodes.png)
+will send the last 6 codes. the number can be changed
+
+</br>
+/setupdate
+
+![plot](./res/NewCodes.png)
+
+whenever the the scaper finds a new coupon code it will send it to this channel
+
+</br>
+/register
+
+* need to be fixed
+
+will automaticly redeem the new codes
+for the users who have been added to the list via this command
+
+
+</br>
+
+#### more comming 
+
+</br>
+
 TODO LIST:
 
 - [x] add discord SlashCommands :smirk:

@@ -122,7 +122,7 @@ public:
             std::cout << "[ DiscordBot ] Bot Started \n";
             
             dpp::slashcommand sl = dpp::slashcommand("getcodes","Check and get the last Coupon Codes",bot->me.id);
-            dpp::slashcommand Upch = dpp::slashcommand("SetUpdate","Set this channel to receive the news coupon codes",bot->me.id);
+            dpp::slashcommand Upch = dpp::slashcommand("SetUpdate","Set this channel to receive the new coupon codes",bot->me.id);
             dpp::slashcommand CR = dpp::slashcommand("register","register your user number to get into the auto redeem code list",bot->me.id)
             .add_option(dpp::command_option(dpp::command_option_type::co_string,"userid","enter your user id from the game",true))
             .add_option(dpp::command_option(dpp::command_option_type::co_string,"username","enter your ingame name",false));
