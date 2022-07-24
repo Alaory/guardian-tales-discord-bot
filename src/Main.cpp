@@ -10,16 +10,22 @@
 
 
 int main(){
+    //init variables
     website web("https://ucngame.com","/codes/guardian-tales-coupon-codes/","wp-block-table",MyHTML_TAG_FIGURE);
     firebase::App *app = firebase::App::Create(firebase::AppOptions());
     DataUp data(app);
+
+    //check database
     Save_cache_to_cloud(web.scrap_codes());
     Update_cache_Storage();
     
+
+
+    //start and set crontab
     DBot bot(TOKEN);
     Bosma::Scheduler sch(1);
     sch.every(std::chrono::hours(6), [&](){
-        std::cout << "[ Scheduler ] updateing database\n";
+        std::cout << "[ Main::Scheduler ] updateing database\n";
         Update_cache_Storage([&web](){
             Save_cache_to_cloud(web.scrap_codes());
         });

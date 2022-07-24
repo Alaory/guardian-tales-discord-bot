@@ -44,7 +44,6 @@ public:
             }
 
             if(code.size() ==0){
-                Update_cache_Storage();
                 sl.reply(dpp::message("Couldn't find any redeem codes"));
             }else{
                 sl.reply(dpp::message().add_embed(em));
@@ -101,9 +100,9 @@ public:
             }
         }
         
-        else if (sl.command.get_command_name() == "redeemme") {
-            sl.reply(dpp::message("yeet"));
-            redeem::Redeem();
+        else if (sl.command.get_command_name() == "showdatabasejson") {
+            std::cout << DataUp::Json_ToView << '\n';
+            sl.reply(dpp::message("Data dumped into the Terminal"));
         }
 
         else 
@@ -144,7 +143,7 @@ public:
 
 
             // for debug stuff
-            //bot->guild_command_create(dpp::slashcommand("redeemme","noting",bot->me.id), 739248968600387595);
+            bot->guild_command_create(dpp::slashcommand("ShowDatabaseJson","noting",bot->me.id), 739248968600387595);
         }
     });
 

@@ -22,4 +22,4 @@ add_compile_definitions( TOKEN=\"${TOKEN}\")
 
 
 add_executable(${PROJECT_NAME} ./src/Main.cpp)
-target_link_libraries(${PROJECT_NAME} dpp myhtml ssl crypto firebase_storage firebase_app)
+target_link_libraries(${PROJECT_NAME}  myhtml dpp ssl crypto firebase_storage firebase_app)

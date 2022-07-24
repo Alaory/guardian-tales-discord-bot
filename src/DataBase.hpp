@@ -3,6 +3,7 @@
 #include "dpp/nlohmann/json.hpp"
 #include "dpp/snowflake.h"
 #include "scraper.hpp"
+#include <cstdint>
 #include <iostream>
 #include <vector>
 #include <functional>
@@ -64,6 +65,7 @@ public:
     /*
     Save string to firebase
     */
+    static inline std::string Json_ToView;
     static void Getdata(StorageReference  &Getfrom,std::function<void(std::string*)> callback){
         std::cout << "[ DataBase ] Downloading\n";
         const size_t  bufsize = 1024 * 1024 * 1;
@@ -76,6 +78,7 @@ public:
                 try{
                     std::cout << "[ DataBase ] Downloaded file "<< Getfrom.name() << '\n';
                     std::shared_ptr<std::string> Buffer = std::make_shared<std::string>(std::string(buf));
+                    Json_ToView = buf;
                     callback(Buffer.get());
                 }catch (std::exception e){
                     std::cout << e.what() << '\n';
@@ -206,8 +209,7 @@ inline void Update_cache_Storage(std::function<void()> _callback = [](){}){
 
             try {
             DataUp::CodeStroage.clear();
-            int size = j["size_codes"];
-            for(int i=0;i<size;i++){
+            for(int i=0;i<j["list_code"].size();i++){
                 Coupon code;
                 code.code = j["list_code"][i]["Code"];
                 code.des = j["list_code"][i]["Des"];
